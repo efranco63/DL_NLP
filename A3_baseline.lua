@@ -116,8 +116,8 @@ function test_model(model, data, labels, opt)
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
-    local debugger = require('fb.debugger')
-    debugger.enter()
+    -- local debugger = require('fb.debugger')
+    -- debugger.enter()
 
     return err
 end
