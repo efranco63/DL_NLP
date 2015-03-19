@@ -1,6 +1,7 @@
 require 'torch'
 require 'nn'
 require 'optim'
+require 'debugger'
 
 ffi = require('ffi')
 
