@@ -44,7 +44,31 @@ end
 
 function TemporalLogExpPooling:updateOutput(input)
    -----------------------------------------------
-   -- your code here
+   -- nOutputFrame
+   nOutputFrame = (input:size(1) - kW)/dW + 1
+   -- Output tensor
+   output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
+   -- perform log exponential pooling
+   iter = 1 --to keep track of what frame we are updating in output
+   for i=1,input:size(1),dW do
+      -- will store the summation of the exponents
+      s = torch.Tensor(1,input:size(2)):fill(0)
+      -- calculate the summation of the exponents and store in s
+      if (i+kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
+         for j=1,i+kW-1 do
+            -- create a copy of the input so we won't modify the input values
+            copyt = torch.Tensor(input:size()):copy(input)
+            s:add(torch.exp(copyt[{ {j},{} }]:mul(beta)))
+         end
+         -- Divide by N
+         s = s/kW
+         -- log the summation of the exponents and multiply by inverse of beta
+         s = torch.log(s)/beta
+         -- copy to output
+         output[{ {iter},{} }] = s
+         iter = iter + 1
+      end
+   end
    -----------------------------------------------
    return self.output
 end
