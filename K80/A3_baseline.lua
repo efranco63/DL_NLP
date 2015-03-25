@@ -175,7 +175,7 @@ function main()
     -- model:add(nn.TemporalMaxPooling(3, 1))
 
     beta = 0.5
-    model:add(nn.SpatialLogExpPooling(3, 1, 1, 1, beta)
+    model:add(nn.SpatialLogExpPooling(3, 1, 1, 1, beta))
     
     model:add(nn.Reshape(20*39, true))
     model:add(nn.Linear(20*39, 5))
