@@ -177,8 +177,11 @@ function main()
     beta = 0.5
     model:add(nn.SpatialLogExpPooling(3, 1, 1, 1, beta))
     
-    model:add(nn.Reshape(20*39, true))
-    model:add(nn.Linear(20*39, 5))
+    model:add(nn.Reshape(41*18, true))
+    model:add(nn.Linear(41*18, 5))
+
+    -- model:add(nn.Reshape(20*39, true))
+    -- model:add(nn.Linear(20*39, 5))
     model:add(nn.LogSoftMax())
 
     criterion = nn.ClassNLLCriterion()
