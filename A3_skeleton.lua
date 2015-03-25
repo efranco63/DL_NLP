@@ -75,7 +75,25 @@ end
 
 function TemporalLogExpPooling:updateGradInput(input, gradOutput)
    -----------------------------------------------
-   -- your code here
+   gradInput = torch.Tensor(input:size())
+   for i=1,input:size(1) do
+      -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
+      grad = torch.Tensor(input[{ {i},{} }]:size()):copy(input[{ {i},{} }])
+      grad = torch.exp(grad*beta)
+      -- will store the sum of the denominator and used in calculating grad
+      sum = torch.Tensor(grad:size())
+      -- calculate sum
+      for j=1,input:size(1) do
+         -- create a copy of the input frame so we won't modify the input values
+         copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+         sum:add(torch.exp(copyt:mul(beta)))
+      end
+      grad:cdiv(sum)
+      -- assign to corresponding frame in gradInput
+      gradInput[{ {i},{} }] = grad
+   end
+
+   -- SOMEHOW MULTIPLY BY GRADOUTPUT
    -----------------------------------------------
    return self.gradInput
 end
