@@ -69,7 +69,7 @@ function TemporalLogExPooling:updateOutput(input)
          iter = iter + 1
       end
    end
-   self.output = torch.Tensor(output:size()):copy(input)
+   self.output = torch.Tensor(output:size()):copy(output)
    -----------------------------------------------
    return self.output
 end
