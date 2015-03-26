@@ -57,8 +57,8 @@ function TemporalLogExpPooling:updateOutput(input)
       if (i+kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
          for j=1,i+kW-1 do
             -- create a copy of the input so we won't modify the input values
-            copyt = torch.Tensor(input:size()):copy(input)
-            s:add(torch.exp(copyt[{ {j},{} }]:mul(beta)))
+            copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+            s:add(torch.exp(copyt:mul(beta)))
          end
          -- Divide by N
          s = s/kW
@@ -69,6 +69,7 @@ function TemporalLogExpPooling:updateOutput(input)
          iter = iter + 1
       end
    end
+   self.output = torch.Tensor(output:size()):copy(input)
    -----------------------------------------------
    return self.output
 end

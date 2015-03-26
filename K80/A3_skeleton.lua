@@ -44,14 +44,57 @@ end
 
 function TemporalLogExpPooling:updateOutput(input)
    -----------------------------------------------
-   -- your code here
+   -- nOutputFrame
+   nOutputFrame = (input:size(1) - kW)/dW + 1
+   -- Output tensor
+   output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
+   -- perform log exponential pooling
+   iter = 1 --to keep track of what frame we are updating in output
+   for i=1,input:size(1),dW do
+      -- will store the summation of the exponents
+      s = torch.Tensor(1,input:size(2)):fill(0)
+      -- calculate the summation of the exponents and store in s
+      if (i+kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
+         for j=1,i+kW-1 do
+            -- create a copy of the input so we won't modify the input values
+            copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+            s:add(torch.exp(copyt:mul(beta)))
+         end
+         -- Divide by N
+         s = s/kW
+         -- log the summation of the exponents and multiply by inverse of beta
+         s = torch.log(s)/beta
+         -- copy to output
+         output[{ {iter},{} }] = s
+         iter = iter + 1
+      end
+   end
+   self.output = torch.Tensor(output:size()):copy(input)
    -----------------------------------------------
    return self.output
 end
 
 function TemporalLogExpPooling:updateGradInput(input, gradOutput)
    -----------------------------------------------
-   -- your code here
+   gradInput = torch.Tensor(input:size())
+   for i=1,input:size(1) do
+      -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
+      grad = torch.Tensor(input[{ {i},{} }]:size()):copy(input[{ {i},{} }])
+      grad = torch.exp(grad*beta)
+      -- will store the sum of the denominator and used in calculating grad
+      sum = torch.Tensor(grad:size())
+      -- calculate sum
+      for j=1,input:size(1) do
+         -- create a copy of the input frame so we won't modify the input values
+         copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+         sum:add(torch.exp(copyt:mul(beta)))
+      end
+      grad:cdiv(sum)
+      -- assign to corresponding frame in gradInput
+      gradInput[{ {i},{} }] = grad
+   end
+
+   -- SOMEHOW MULTIPLY BY GRADOUTPUT
    -----------------------------------------------
    return self.gradInput
 end
