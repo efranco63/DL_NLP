@@ -44,31 +44,67 @@ end
 
 function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO TemporalLogExpPooling
    -----------------------------------------------
-   -- nOutputFrame
-   nOutputFrame = (input:size(1) - self.kW)/self.dW + 1
-   -- Output tensor
-   output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
-   -- perform log exponential pooling
-   iter = 1 --to keep track of what frame we are updating in output
-   for i=1,input:size(1),self.dW do
-      -- will store the summation of the exponents
-      s = torch.Tensor(1,input:size(2)):fill(0)
-      -- calculate the summation of the exponents and store in s
-      if (i+self.kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
-         for j=1,i+self.kW-1 do
-            -- create a copy of the input so we won't modify the input values
-            copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
-            s:add(torch.exp(copyt:mul(self.beta)))
+   
+   -- if the input tensor is 2D (nInputFrame x inputFrameSize)
+   if input:dim() ==  2 then
+
+      -- nOutputFrame
+      nOutputFrame = (input:size(1) - self.kW)/self.dW + 1
+      -- Output tensor
+      output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
+      -- perform log exponential pooling
+      iter = 1 --to keep track of what frame we are updating in output
+      for i=1,input:size(1),self.dW do
+         -- will store the summation of the exponents
+         s = torch.Tensor(1,input:size(2)):fill(0)
+         -- calculate the summation of the exponents and store in s
+         if (i+self.kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
+            for j=1,i+self.kW-1 do
+               -- create a copy of the input so we won't modify the input values
+               copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+               s:add(torch.exp(copyt:mul(self.beta)))
+            end
+            -- Divide by N
+            s = s/self.kW
+            -- log the summation of the exponents and multiply by inverse of beta
+            s = torch.log(s)/self.beta
+            -- copy to output
+            output[{ {iter},{} }] = s
+            iter = iter + 1
          end
-         -- Divide by N
-         s = s/self.kW
-         -- log the summation of the exponents and multiply by inverse of beta
-         s = torch.log(s)/self.beta
-         -- copy to output
-         output[{ {iter},{} }] = s
-         iter = iter + 1
       end
+
+   -- if the input tensor is 3D (nBatchFrame x nInputFrame x inputFrameSize)
+   else
+
+      -- nOutputFrame
+      nOutputFrame = (input:size(2) - self.kW)/self.dW + 1
+      -- Output tensor
+      output = torch.Tensor(input:size(1), nOutputFrame, input:size(3)):fill(0)
+      -- perform log exponential pooling
+      iter = 1 --to keep track of what frame we are updating in output
+      for i=1,input:size(2),self.dW do
+         -- will store the summation of the exponents
+         s = torch.Tensor(1,input:size(3)):fill(0)
+         -- calculate the summation of the exponents and store in s
+         if (i+self.kW-1) <= input:size(2) then --if what the kernel envelopes is not outside the limit
+            for j=1,i+self.kW-1 do
+               -- create a copy of the input so we won't modify the input values
+               copyt = torch.Tensor(input[{ {},{j},{} }]:size()):copy(input[{ {},{j},{} }])
+               s:add(torch.exp(copyt:mul(self.beta)))
+            end
+            -- Divide by N
+            s = s/self.kW
+            -- log the summation of the exponents and multiply by inverse of beta
+            s = torch.log(s)/self.beta
+            -- copy to output
+            output[{ {}, {iter}, {} }] = s
+            iter = iter + 1
+         end
+      end
+
    end
+
    self.output = torch.Tensor(output:size()):copy(output)
    -----------------------------------------------
    return self.output
