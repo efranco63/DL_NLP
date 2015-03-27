@@ -90,7 +90,7 @@ function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO Tem
          if (i+self.kW-1) <= input:size(2) then --if what the kernel envelopes is not outside the limit
             for j=1,i+self.kW-1 do
                -- create a copy of the input so we won't modify the input values
-               copyt = torch.Tensor(input[{ {},{j},{} }]:size()):copy(input[{ {},{j},{} }])
+               copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
                s:add(torch.exp(copyt:mul(self.beta)))
             end
             -- Divide by N
