@@ -76,7 +76,7 @@ end
 
 function TemporalLogExPooling:updateGradInput(input, gradOutput)
    -----------------------------------------------
-   gradInput = torch.Tensor(input:size())
+   gradInput = torch.Tensor(input:size()):fill(0)
    for i=1,input:size(2) do
       -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
       grad = torch.Tensor(input[{ {},{i} }]:size()):copy(input[{ {},{i} }])
