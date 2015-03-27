@@ -42,7 +42,7 @@ function TemporalLogExPooling:__init(kW, dW, beta)
    self.indices = torch.Tensor()
 end
 
-function TemporalLogExPooling:updateOutput(input)
+function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO TemporalLogExpPooling
    -----------------------------------------------
    -- nOutputFrame
    nOutputFrame = (input:size(1) - self.kW)/self.dW + 1
