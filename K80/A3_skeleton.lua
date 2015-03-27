@@ -131,6 +131,7 @@ function TemporalLogExPooling:updateGradInput(input, gradOutput)
 
    -- SOMEHOW MULTIPLY BY GRADOUTPUT
    -----------------------------------------------
+   self.gradInput = torch.Tensor(gradInput:size()):copy(gradInput)
    return self.gradInput
 end
 
