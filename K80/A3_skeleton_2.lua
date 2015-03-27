@@ -111,23 +111,54 @@ function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO Tem
 end
 
 function TemporalLogExPooling:updateGradInput(input, gradOutput)
+
    -----------------------------------------------
-   gradInput = torch.Tensor(input:size()):fill(0)
-   for i=1,input:size(2) do
-      -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
-      grad = torch.Tensor(input[{ {},{i} }]:size()):copy(input[{ {},{i} }])
-      grad = torch.exp( grad * self.beta )
-      -- calculate sum
-      for j= 1,gradOutput:size(1) do--for each value in gradOutput[j,{}], we should distribute the value to grdInput
+   if input:dim() ==  2 then --2D
 
-         z = gradOutput[{j,i}]
-         sum_of_exp_xk = grad[{  { (j-1)*self.dW + 1 , (j-1)*self.dW + self.kW }  }]:sum()
+      gradInput = torch.Tensor(input:size()):fill(0)
 
-         for k=(j-1)*self.dW + 1,(j-1)*self.dW + self.kW do
-            gradInput[{k,i}] = gradInput[{k,i}] + z * math.exp(self.beta * input[{k,i}]) / sum_of_exp_xk
+      for i=1,input:size(2) do
+         -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
+         grad = torch.Tensor(input[{ {},{i} }]:size()):copy(input[{ {},{i} }])
+         grad = torch.exp( grad * self.beta )
+         -- calculate sum
+         for j= 1,gradOutput:size(1) do--for each value in gradOutput[j,{}], we should distribute the value to grdInput
 
+            z = gradOutput[{j,i}]
+            sum_of_exp_xk = grad[{  { (j-1)*self.dW + 1 , (j-1)*self.dW + self.kW }  }]:sum()
+
+            for k=(j-1)*self.dW + 1,(j-1)*self.dW + self.kW do
+               gradInput[{k,i}] = gradInput[{k,i}] + z * math.exp(self.beta * input[{k,i}]) / sum_of_exp_xk
+            end
+         
          end
-      
+      end
+
+   else --3D
+      --print("3D logexp")
+      nBatchFrame = input:size(1)
+      gradInput = torch.Tensor(input:size()):fill(0)
+
+      for h=1,nBatchFrame do
+
+         for i=1,input:size(3) do
+
+            -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
+            grad = torch.Tensor(input[{ {h},{},{i} }]:size()):copy(input[{ {h},{},{i} }])
+            grad = torch.exp( grad * self.beta )
+            -- calculate sum
+            for j= 1,gradOutput:size(2) do--for each value in gradOutput[j,{}], we should distribute the value to grdInput
+
+               z = gradOutput[{h,j,i}]
+               sum_of_exp_xk = grad[{  {1},{ (j-1)*self.dW + 1 , (j-1)*self.dW + self.kW },{1} }]:sum()
+
+               for k=(j-1)*self.dW + 1,(j-1)*self.dW + self.kW do
+                  gradInput[{h,k,i}] = gradInput[{h,k,i}] + z * math.exp(self.beta * input[{h,k,i}]) / sum_of_exp_xk
+               end
+            
+            end
+         end
+
       end
 
    end
@@ -144,3 +175,19 @@ function TemporalLogExPooling:empty()
    self.indices:resize()
    self.indices:storage():resize(0)
 end
+
+
+--function main()
+--
+--   model = nn.Sequential()
+--   model = model:add(nn.TemporalLogExPooling(3,1,1))
+--
+--  x = torch.Tensor(3,4,5)
+--   s = x:storage()
+--   for i=1,s:size() do -- fill up the Storage
+--     s[i] = i
+--   end
+--
+--   ou = model:forward(x)
+--   ou2 = model:backward(x,ou)
+--end
