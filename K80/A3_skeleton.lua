@@ -30,9 +30,9 @@
 -- of weight ijk for the given input.
 ------------------------------------------------------------------------
 
-local TemporalLogExPooling, parent = torch.class('nn.TemporalLogExPooling', 'nn.Module')
+local TemporalLogExpPooling, parent = torch.class('nn.TemporalLogExpPooling', 'nn.Module')
 
-function TemporalLogExPooling:__init(kW, dW, beta)
+function TemporalLogExpPooling:__init(kW, dW, beta)
    parent.__init(self)
 
    self.kW = kW
@@ -42,7 +42,7 @@ function TemporalLogExPooling:__init(kW, dW, beta)
    self.indices = torch.Tensor()
 end
 
-function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO TemporalLogExpPooling
+function TemporalLogExpPooling:updateOutput(input)
    -----------------------------------------------
    -- if the input tensor is 2D (nInputFrame x inputFrameSize)
    if input:dim() ==  2 then
@@ -109,33 +109,38 @@ function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO Tem
    return self.output
 end
 
-function TemporalLogExPooling:updateGradInput(input, gradOutput)
+function TemporalLogExpPooling:updateGradInput(input, gradOutput)
    -----------------------------------------------
-   gradInput = torch.Tensor(input:size())
-   for i=1,input:size(1) do
-      -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
-      grad = torch.Tensor(input[{ {i},{} }]:size()):copy(input[{ {i},{} }])
-      grad = torch.exp(grad*self.beta)
-      -- will store the sum of the denominator and used in calculating grad
-      sum = torch.Tensor(grad:size())
-      -- calculate sum
-      for j=1,input:size(1) do
-         -- create a copy of the input frame so we won't modify the input values
-         copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
-         sum:add(torch.exp(copyt:mul(self.beta)))
-      end
-      grad:cdiv(sum)
-      -- assign to corresponding frame in gradInput
-      gradInput[{ {i},{} }] = grad
-   end
+   gradInput = torch.Tensor(input:size()):fill(0)
+   
+   -- calc a tensor that holds the sum of exp(beta*xj) for each column
+   temp_vals = torch.Tensor(input:size()):copy(input)
+   temp_vals = torch.exp( temp_vals * self.beta )
+   sum_exp_beta = torch.Tensor(1,temp_vals:size(2)):fill(0)
+   for i=1,temp_vals:size(2) do sum_exp_beta[{ {},{i} }] = temp_vals[{ {},{i} }]:sum() end
 
-   -- SOMEHOW MULTIPLY BY GRADOUTPUT
+   -- counter for using gradOutput
+   iter = 1
+   -- calculate gradInput by dividing each xk by the sum_exp_beta and multiplying by coresponding gradient
+   for i=1,input:size(1),self.dW do
+      grad = torch.Tensor(input[{ {i,i+self.kW-1},{} }]:size()):copy(input[{ {i,i+self.kW-1},{} }])
+      if (i+self.kW-1) <= input:size(1) then
+         for j=1,self.kW do
+            -- divide by sum of exp beta
+            grad[{ {j},{} }]:cdiv(sum_exp_beta)
+            --multiply by corresponding gradient
+            grad[{ {j},{} }]:cmul(gradOutput[{ {iter},{} }])
+         end
+      end
+      gradInput[{ {i,i+self.kW-1},{} }] = grad[{ {j},{} }]
+   iter = iter + 1
+   end
    -----------------------------------------------
    self.gradInput = torch.Tensor(gradInput:size()):copy(gradInput)
    return self.gradInput
 end
 
-function TemporalLogExPooling:empty()
+function TemporalLogExpPooling:empty()
    self.gradInput:resize()
    self.gradInput:storage():resize(0)
    self.output:resize()
