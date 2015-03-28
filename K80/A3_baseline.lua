@@ -100,7 +100,7 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
         for batch=1,opt.nBatches do
             opt.idx = (order[batch] - 1) * opt.minibatchSize + 1
             optim.sgd(feval, parameters, opt)
-            print("epoch: ", epoch, " batch: ", batch)
+            -- print("epoch: ", epoch, " batch: ", batch)
         end
 
         local accuracy = test_model(model, test_data, test_labels, opt)
@@ -139,7 +139,7 @@ function main()
     opt.nTestDocs = 0
     opt.nClasses = 5
     -- SGD parameters - play around with these
-    opt.nEpochs = 5
+    opt.nEpochs = 30
     opt.minibatchSize = 64
     opt.nBatches = math.floor(opt.nTrainDocs / opt.minibatchSize)
     opt.learningRate = 0.01
@@ -173,10 +173,10 @@ function main()
     --------------------------------------------------------------------------------------
     -- Replace this temporal max-pooling module with your log-exponential pooling module:
     --------------------------------------------------------------------------------------
-    -- model:add(nn.TemporalMaxPooling(3, 1))
+    model:add(nn.TemporalMaxPooling(3, 1))
 
-    beta = 0.3
-    model:add(nn.TemporalLogExPooling(3, 1, beta))
+    -- beta = 0.3
+    -- model:add(nn.TemporalLogExPooling(3, 1, beta))
 
     -- model:add(nn.Reshape(20*13, true))
     -- model:add(nn.Linear(20*13, 5))
