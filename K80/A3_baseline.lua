@@ -140,11 +140,11 @@ function main()
     opt.nClasses = 5
     -- SGD parameters - play around with these
     opt.nEpochs = 5
-    opt.minibatchSize = 128
+    opt.minibatchSize = 64
     opt.nBatches = math.floor(opt.nTrainDocs / opt.minibatchSize)
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 0.001
-    opt.momentum = 0.1
+    opt.momentum = 0.9
     opt.idx = 1
 
     print("Loading word vectors...")
