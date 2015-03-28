@@ -134,8 +134,8 @@ function TemporalLogExpPooling:updateGradInput(input, gradOutput)
                --multiply by corresponding gradient
                grad[{ {j},{} }]:cmul(gradOutput[{ {iter},{} }])
             end
-         end
          gradInput[{ {i,i+self.kW-1},{} }] = grad[{ {j},{} }]
+         end
       iter = iter + 1
       end
 
@@ -162,8 +162,8 @@ function TemporalLogExpPooling:updateGradInput(input, gradOutput)
                --multiply by corresponding gradient
                grad[{ {},{j},{} }]:cmul(gradOutput[{ {},{iter},{} }])
             end
-         end
          gradInput[{ {},{i,i+self.kW-1},{} }] = grad[{ {},{j},{} }]
+         end
       iter = iter + 1
       end
 
