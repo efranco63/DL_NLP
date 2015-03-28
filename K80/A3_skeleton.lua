@@ -128,6 +128,7 @@ function TemporalLogExpPooling:updateGradInput(input, gradOutput)
       for i=1,input:size(1),self.dW do
          if (i+self.kW-1) <= input:size(1) then
          grad = torch.Tensor(input[{ {i,i+self.kW-1},{} }]:size()):copy(input[{ {i,i+self.kW-1},{} }])
+         grad = torch.exp( grad * self.beta )
             for j=1,self.kW do
                -- divide by sum of exp beta
                grad[{ {j},{} }]:cdiv(sum_exp_beta)
@@ -156,6 +157,7 @@ function TemporalLogExpPooling:updateGradInput(input, gradOutput)
       for i=1,input:size(2),self.dW do
          if (i+self.kW-1) <= input:size(2) then
             grad = torch.Tensor(input[{ {},{i,i+self.kW-1},{} }]:size()):copy(input[{ {},{i,i+self.kW-1},{} }])
+            grad = torch.exp( grad * self.beta )
             for j=1,self.kW do
                -- divide by sum of exp beta
                grad[{ {},{j},{} }]:cdiv(sum_exp_beta)
