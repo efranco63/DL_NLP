@@ -44,58 +44,134 @@ end
 
 function TemporalLogExpPooling:updateOutput(input)
    -----------------------------------------------
-   -- nOutputFrame
-   nOutputFrame = (input:size(1) - kW)/dW + 1
-   -- Output tensor
-   output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
-   -- perform log exponential pooling
-   iter = 1 --to keep track of what frame we are updating in output
-   for i=1,input:size(1),dW do
-      -- will store the summation of the exponents
-      s = torch.Tensor(1,input:size(2)):fill(0)
-      -- calculate the summation of the exponents and store in s
-      if (i+kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
-         for j=1,i+kW-1 do
-            -- create a copy of the input so we won't modify the input values
-            copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
-            s:add(torch.exp(copyt:mul(beta)))
+   -- if the input tensor is 2D (nInputFrame x inputFrameSize)
+   if input:dim() ==  2 then
+
+      -- nOutputFrame
+      nOutputFrame = (input:size(1) - self.kW)/self.dW + 1
+      -- Output tensor
+      output = torch.Tensor(nOutputFrame, input:size(2)):fill(0)
+      -- perform log exponential pooling
+      iter = 1 --to keep track of what frame we are updating in output
+      for i=1,input:size(1),self.dW do
+         -- will store the summation of the exponents
+         s = torch.Tensor(1,input:size(2)):fill(0)
+         -- calculate the summation of the exponents and store in s
+         if (i+self.kW-1) <= input:size(1) then --if what the kernel envelopes is not outside the limit
+            for j=1,i+self.kW-1 do
+               -- create a copy of the input so we won't modify the input values
+               copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
+               s:add(torch.exp(copyt:mul(self.beta)))
+            end
+            -- Divide by N
+            s = s/self.kW
+            -- log the summation of the exponents and multiply by inverse of beta
+            s = torch.log(s)/self.beta
+            -- copy to output
+            output[{ {iter},{} }] = s
+            iter = iter + 1
          end
-         -- Divide by N
-         s = s/kW
-         -- log the summation of the exponents and multiply by inverse of beta
-         s = torch.log(s)/beta
-         -- copy to output
-         output[{ {iter},{} }] = s
-         iter = iter + 1
       end
+
+   -- if the input tensor is 3D (nBatchFrame x nInputFrame x inputFrameSize)
+   else
+
+      -- nOutputFrame
+      nOutputFrame = (input:size(2) - self.kW)/self.dW + 1
+      -- Output tensor
+      output = torch.Tensor(input:size(1), nOutputFrame, input:size(3)):fill(0)
+      -- perform log exponential pooling
+      iter = 1 --to keep track of what frame we are updating in output
+      for i=1,input:size(2),self.dW do
+         -- will store the summation of the exponents
+         s = torch.Tensor(input:size(1),1,input:size(3)):fill(0)
+         -- calculate the summation of the exponents and store in s
+         if (i+self.kW-1) <= input:size(2) then --if what the kernel envelopes is not outside the limit
+            for j=1,i+self.kW-1 do
+               -- create a copy of the input so we won't modify the input values
+               copyt = torch.Tensor(input[{ {},{j},{} }]:size()):copy(input[{ {},{j},{} }])
+               s:add(torch.exp(copyt:mul(self.beta)))
+            end
+            -- Divide by N
+            s = s/self.kW
+            -- log the summation of the exponents and multiply by inverse of beta
+            s = torch.log(s)/self.beta
+            -- copy to output
+            output[{ {}, {iter}, {} }] = s
+            iter = iter + 1
+         end
+      end
+
    end
-   self.output = torch.Tensor(output:size()):copy(input)
+
+   self.output = torch.Tensor(output:size()):copy(output)
    -----------------------------------------------
    return self.output
 end
 
 function TemporalLogExpPooling:updateGradInput(input, gradOutput)
    -----------------------------------------------
-   gradInput = torch.Tensor(input:size())
-   for i=1,input:size(1) do
-      -- will store the gradient for current iteration. First copy the values of the frame multiplied by beta and take log
-      grad = torch.Tensor(input[{ {i},{} }]:size()):copy(input[{ {i},{} }])
-      grad = torch.exp(grad*beta)
-      -- will store the sum of the denominator and used in calculating grad
-      sum = torch.Tensor(grad:size())
-      -- calculate sum
-      for j=1,input:size(1) do
-         -- create a copy of the input frame so we won't modify the input values
-         copyt = torch.Tensor(input[{ {j},{} }]:size()):copy(input[{ {j},{} }])
-         sum:add(torch.exp(copyt:mul(beta)))
-      end
-      grad:cdiv(sum)
-      -- assign to corresponding frame in gradInput
-      gradInput[{ {i},{} }] = grad
-   end
+   -- if the input tensor is 2D (nInputFrame x inputFrameSize)
+   if input:dim() ==  2 then
 
-   -- SOMEHOW MULTIPLY BY GRADOUTPUT
+      gradInput = torch.Tensor(input:size()):fill(0)
+      
+      -- calc a tensor that holds the sum of exp(beta*xj) for each column
+      temp_vals = torch.Tensor(input:size()):copy(input)
+      temp_vals = torch.exp( temp_vals * self.beta )
+      sum_exp_beta = torch.Tensor(1,temp_vals:size(2)):fill(0)
+      for i=1,temp_vals:size(2) do sum_exp_beta[{ {},{i} }] = temp_vals[{ {},{i} }]:sum() end
+
+      -- counter for using gradOutput
+      iter = 1
+      -- calculate gradInput by dividing each xk by the sum_exp_beta and multiplying by coresponding gradient
+      for i=1,input:size(1),self.dW do
+         if (i+self.kW-1) <= input:size(1) then
+         grad = torch.Tensor(input[{ {i,i+self.kW-1},{} }]:size()):copy(input[{ {i,i+self.kW-1},{} }])
+         grad = torch.exp( grad * self.beta )
+            for j=1,self.kW do
+               -- divide by sum of exp beta
+               grad[{ {j},{} }]:cdiv(sum_exp_beta)
+               --multiply by corresponding gradient
+               grad[{ {j},{} }]:cmul(gradOutput[{ {iter},{} }])
+            end
+         gradInput[{ {i,i+self.kW-1},{} }] = grad[{ {j},{} }]
+         end
+      iter = iter + 1
+      end
+
+   -- if the input tensor is 3D (nBatchFrame x nInputFrame x inputFrameSize)
+   else
+
+      gradInput = torch.Tensor(input:size()):fill(0)
+      
+      -- calc a tensor that holds the sum of exp(beta*xj) for each column
+      temp_vals = torch.Tensor(input:size()):copy(input)
+      temp_vals = torch.exp( temp_vals * self.beta )
+      sum_exp_beta = torch.Tensor(temp_vals:size(1),1,temp_vals:size(3)):fill(0)
+      for i=1,temp_vals:size(3) do sum_exp_beta[{ {},{},{i} }] = temp_vals[{ {},{},{i} }]:sum() end
+
+      -- counter for using gradOutput
+      iter = 1
+      -- calculate gradInput by dividing each xk by the sum_exp_beta and multiplying by coresponding gradient
+      for i=1,input:size(2),self.dW do
+         if (i+self.kW-1) <= input:size(2) then
+            grad = torch.Tensor(input[{ {},{i,i+self.kW-1},{} }]:size()):copy(input[{ {},{i,i+self.kW-1},{} }])
+            grad = torch.exp( grad * self.beta )
+            for j=1,self.kW do
+               -- divide by sum of exp beta
+               grad[{ {},{j},{} }]:cdiv(sum_exp_beta)
+               --multiply by corresponding gradient
+               grad[{ {},{j},{} }]:cmul(gradOutput[{ {},{iter},{} }])
+            end
+         gradInput[{ {},{i,i+self.kW-1},{} }] = grad[{ {},{j},{} }]
+         end
+      iter = iter + 1
+      end
+
+   end
    -----------------------------------------------
+   self.gradInput = torch.Tensor(gradInput:size()):copy(gradInput)
    return self.gradInput
 end
 
