@@ -166,6 +166,8 @@ function TemporalLogExpPooling:updateGradInput(input, gradOutput)
          gradInput[{ {},{i,i+self.kW-1},{} }] = grad[{ {},{j},{} }]
       iter = iter + 1
       end
+
+   end
    -----------------------------------------------
    self.gradInput = torch.Tensor(gradInput:size()):copy(gradInput)
    return self.gradInput
