@@ -3,7 +3,7 @@ require 'nn'
 require 'optim'
 
 ffi = require('ffi')
-dofile 'A3_skeleton_2.lua'
+dofile 'A3_skeleton.lua'
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
