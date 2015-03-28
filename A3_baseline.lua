@@ -116,8 +116,8 @@ function test_model(model, data, labels, opt)
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
-    -- local debugger = require('fb.debugger')
-    -- debugger.enter()
+    --local debugger = require('fb.debugger')
+    --debugger.enter()
 
     return err
 end
@@ -127,8 +127,8 @@ function main()
     -- Configuration parameters
     opt = {}
     -- change these to the appropriate data locations
-    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.50d.txt" -- path to raw glove data .txt file
-    opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
+    opt.glovePath = "CHANGE_ME" -- path to raw glove data .txt file
+    opt.dataPath = "CHANGE_ME"
     -- word vector dimensionality
     opt.inputDim = 50 
     -- nTrainDocs is the number of documents per class used in the training set, i.e.
