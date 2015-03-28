@@ -142,7 +142,7 @@ function main()
     opt.nEpochs = 60
     opt.minibatchSize = 128
     opt.nBatches = math.floor(opt.nTrainDocs / opt.minibatchSize)
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 0.001
     opt.momentum = 0.1
     opt.idx = 1
@@ -174,7 +174,7 @@ function main()
     -- Replace this temporal max-pooling module with your log-exponential pooling module:
     --------------------------------------------------------------------------------------
     -- model:add(nn.TemporalMaxPooling(3, 1))
-    beta = 5
+    beta = 8
     model:add(nn.TemporalLogExpPooling(3, 1, beta))
     
     model:add(nn.Reshape(20*39, true))
