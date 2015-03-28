@@ -3,7 +3,7 @@ require 'nn'
 require 'optim'
 
 ffi = require('ffi')
-dofile 'A3_skeleton.lua'
+dofile 'A3_skeleton_2.lua'
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
@@ -176,7 +176,7 @@ function main()
     -- model:add(nn.TemporalMaxPooling(3, 1))
 
     beta = 0.3
-    model:add(nn.TemporalLogExpPooling(3, 1, beta))
+    model:add(nn.TemporalLogExPooling(3, 1, beta))
 
     -- model:add(nn.Reshape(20*13, true))
     -- model:add(nn.Linear(20*13, 5))
