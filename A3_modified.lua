@@ -40,7 +40,7 @@ end
 
 function calc_tfidf(raw_data,opt)
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
-    order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
+    local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
     
     -- calculate tf-idfs for words in the corpus *******************************************************
     -- stores the term frequency of a word for a particular document
