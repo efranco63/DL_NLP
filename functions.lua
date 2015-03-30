@@ -84,7 +84,7 @@ function calc_tfidf(raw_data,opt)
     -- documents each word appears in
     for key,val in pairs(idf) do idf[key] = math.log((opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))/idf[key]) end
 
-    return tf,idf
+    return tf,idf,order
 
 end
 
@@ -94,13 +94,10 @@ end
 -- before computing the bag-of-words average; this limits the effects of words like "the".
 -- Still better would be to concatenate the word vectors into a variable-length
 -- 2D tensor and train a more powerful convolutional or recurrent model on this directly.
-function preprocess_data(raw_data, wordvector_table, opt)
+function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
     
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.inputDim, 1)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    
-    -- use torch.randperm to shuffle the data, since it's ordered by class in the file
-    local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
 
     for i=1,opt.nClasses do
         for j=1,opt.nTrainDocs+opt.nTestDocs do
@@ -115,8 +112,10 @@ function preprocess_data(raw_data, wordvector_table, opt)
             -- break each review into words and compute the document average
             for word in document:gmatch("%S+") do
                 if wordvector_table[word:gsub("%p+", "")] then
+                    -- calculate tf-idf weighted word vector
+                    wv = wordvector_table[word:gsub("%p+", "")] * tf[k][word] * idf[word]
                     doc_size = doc_size + 1
-                    data[k]:add(wordvector_table[word:gsub("%p+", "")])
+                    data[k]:add(wv)
                 end
             end
 
