@@ -113,7 +113,7 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
             for word in document:gmatch("%S+") do
                 if wordvector_table[word:gsub("%p+", "")] then
                     doc_size = doc_size + 1
-                    -- local tf_idf = tf[k][word:gsub("%p+", "")] * idf[word:gsub("%p+", "")]
+                    local tf_idf = tf[k][word:gsub("%p+", "")] * idf[word:gsub("%p+", "")]
                     -- weight each word vector by its tf-idf value
                     -- data[k]:add(wordvector_table[word:gsub("%p+", "")] *  tf_idf)
                     data[k]:add(wordvector_table[word:gsub("%p+", "")])
