@@ -177,8 +177,9 @@ function main()
     -- beta = 15
     -- model:add(nn.TemporalLogExpPooling(3, 1, beta))
     
-    model:add(nn.Reshape(20*39, true))
-    model:add(nn.Linear(20*39, 5))
+    -- 39
+    model:add(nn.Reshape(20*89, true))
+    model:add(nn.Linear(20*89, 5))
     model:add(nn.LogSoftMax())
 
     criterion = nn.ClassNLLCriterion()
