@@ -128,14 +128,14 @@ function main()
     -- Configuration parameters
     opt = {}
     -- change these to the appropriate data locations
-    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.50d.txt" -- path to raw glove data .txt file
+    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.100d.txt" -- path to raw glove data .txt file
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- word vector dimensionality
-    opt.inputDim = 50 
+    opt.inputDim = 100 
     -- nTrainDocs is the number of documents per class used in the training set, i.e.
     -- here we take the first nTrainDocs documents from each class as training samples
     -- and use the rest as a validation set.
-    opt.nTrainDocs = 10000
+    opt.nTrainDocs = 20000
     opt.nTestDocs = 0
     opt.nClasses = 5
     -- SGD parameters - play around with these
@@ -173,9 +173,9 @@ function main()
     --------------------------------------------------------------------------------------
     -- Replace this temporal max-pooling module with your log-exponential pooling module:
     --------------------------------------------------------------------------------------
-    -- model:add(nn.TemporalMaxPooling(3, 1))
-    beta = 15
-    model:add(nn.TemporalLogExpPooling(3, 1, beta))
+    model:add(nn.TemporalMaxPooling(3, 1))
+    -- beta = 15
+    -- model:add(nn.TemporalLogExpPooling(3, 1, beta))
     
     model:add(nn.Reshape(20*39, true))
     model:add(nn.Linear(20*39, 5))
