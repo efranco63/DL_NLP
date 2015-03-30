@@ -128,10 +128,10 @@ function main()
     -- Configuration parameters
     opt = {}
     -- change these to the appropriate data locations
-    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.150d.txt" -- path to raw glove data .txt file
+    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.200d.txt" -- path to raw glove data .txt file
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- word vector dimensionality
-    opt.inputDim = 150 
+    opt.inputDim = 200 
     -- nTrainDocs is the number of documents per class used in the training set, i.e.
     -- here we take the first nTrainDocs documents from each class as training samples
     -- and use the rest as a validation set.
