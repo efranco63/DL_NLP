@@ -58,19 +58,17 @@ function calc_tfidf(raw_data,wordvector_table, opt)
             local index = raw_data.index[i][j]
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             for word in document:gmatch("%S+") do
-                if wordvector_table[word:gsub("%p+", "")] then
-                    doc_size = doc_size + 1
-                    -- increment the count for this word for its tf
-                    if tf[k][word] 
-                        then tf[k][word] = tf[k][word] + 1
-                        else tf[k][word] = 1
-                    end
-                    -- increment the count for this word for its idf if it hasn't already been seen in this doc
-                    if not seen[word] then 
-                        if idf[word] then idf[word] = idf[word] + 1 else idf[word] = 1 end
-                    end
-                    seen[word] = 1
+                doc_size = doc_size + 1
+                -- increment the count for this word for its tf
+                if tf[k][word] 
+                    then tf[k][word] = tf[k][word] + 1
+                    else tf[k][word] = 1
                 end
+                -- increment the count for this word for its idf if it hasn't already been seen in this doc
+                if not seen[word] then 
+                    if idf[word] then idf[word] = idf[word] + 1 else idf[word] = 1 end
+                end
+                seen[word] = 1
             end
             tf[k]['doc_size'] = doc_size
             -- calculate term frequency for each word in this k-th document
