@@ -58,7 +58,7 @@ function calc_tfidf(raw_data,opt)
             local index = raw_data.index[i][j]
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             for w in document:gmatch("%S+") do
-                word = w:gsub("%p+", "")
+                local word = w:gsub("%p+", "")
                 doc_size = doc_size + 1
                 -- increment the count for this word for its tf
                 if tf[k][word] 
@@ -113,7 +113,7 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
             for word in document:gmatch("%S+") do
                 if wordvector_table[word:gsub("%p+", "")] then
                     doc_size = doc_size + 1
-                    tf_idf = tf[k][word:gsub("%p+", "")] * idf[word:gsub("%p+", "")]
+                    local tf_idf = tf[k][word:gsub("%p+", "")] * idf[word:gsub("%p+", "")]
                     -- weight each word vector by its tf-idf value
                     data[k]:add(wordvector_table[word:gsub("%p+", "")] *  tf_idf)
                 end
