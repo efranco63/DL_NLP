@@ -128,10 +128,10 @@ function main()
     -- Configuration parameters
     opt = {}
     -- change these to the appropriate data locations
-    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.100d.txt" -- path to raw glove data .txt file
+    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B.150d.txt" -- path to raw glove data .txt file
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- word vector dimensionality
-    opt.inputDim = 100 
+    opt.inputDim = 150 
     -- nTrainDocs is the number of documents per class used in the training set, i.e.
     -- here we take the first nTrainDocs documents from each class as training samples
     -- and use the rest as a validation set.
@@ -168,7 +168,7 @@ function main()
     model = nn.Sequential()
    
     -- if you decide to just adapt the baseline code for part 2, you'll probably want to make this linear and remove pooling
-    model:add(nn.TemporalConvolution(1, 20, 10, 1))
+    model:add(nn.TemporalConvolution(1, 40, 10, 1))
     
     --------------------------------------------------------------------------------------
     -- Replace this temporal max-pooling module with your log-exponential pooling module:
