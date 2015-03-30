@@ -116,7 +116,7 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
                     local w = word:gsub("%p+", "")
                     local tf_idf = tf[k][w] * idf[w]
                     -- weight each word vector by its tf-idf value
-                    data[k]:add(wordvector_table[w:mul(tf_idf)])
+                    data[k]:add(wordvector_table[w]:mul(tf_idf))
                     -- data[k]:add(wordvector_table[word:gsub("%p+", "")])
                 end
             end
