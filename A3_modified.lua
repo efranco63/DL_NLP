@@ -84,7 +84,7 @@ function calc_tfidf(raw_data,opt)
     -- documents each word appears in
     for key,val in pairs(idf) do idf[key] = math.log((opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))/idf[key]) end
 
-    return tf,idf
+    return tf,idf,order
 
 end
 
