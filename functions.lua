@@ -38,7 +38,7 @@ function load_glove(path, inputDim)
     return glove_table
 end
 
-function calc_tfidf(raw_data,opt)
+function calc_tfidf(raw_data,wordvector_table, opt)
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
     
