@@ -38,6 +38,53 @@ function load_glove(path, inputDim)
     return glove_table
 end
 
+function calc_tfidf(raw_data,opt)
+    -- use torch.randperm to shuffle the data, since it's ordered by class in the file
+    local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
+    
+    -- calculate tf-idfs for words in the corpus *******************************************************
+    -- stores the term frequency of a word for a particular document
+    local tf = {}
+    -- initially will store the number of documents each word appears in for calculating idf in the end
+    local idf = {}
+    for i=1,opt.nClasses do
+        for j=1,opt.nTrainDocs+opt.nTestDocs do
+            local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
+            -- initialize dict entry for k-th document
+            tf[k] = {}
+            -- dictionary to keep track of which words have been seen for this document
+            local seen = {}
+            local doc_size = 0
+            local index = raw_data.index[i][j]
+            local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
+            for word in document:gmatch("%S+") do
+                if wordvector_table[word:gsub("%p+", "")] then
+                    doc_size = doc_size + 1
+                    -- increment the count for this word for its tf
+                    if tf[k][word] 
+                        then tf[k][word] = tf[k][word] + 1
+                        else tf[k][word] = 1
+                    end
+                    -- increment the count for this word for its idf if it hasn't already been seen in this doc
+                    if not seen[word] then 
+                        if idf[word] then idf[word] = idf[word] + 1 else idf[word] = 1 end
+                    end
+                    seen[word] = 1
+                end
+            end
+            tf[k]['doc_size'] = doc_size
+            -- calculate term frequency for each word in this k-th document
+            for key,val in pairs(tf[k]) do tf[k][key] = tf[k][key]/tf[k]['doc_size'] end
+        end
+    end
+    -- calculate idf for each word by taking log of total number of documents divided by number of 
+    -- documents each word appears in
+    for key,val in pairs(idf) do idf[key] = math.log((opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))/idf[key]) end
+
+    return tf,idf
+
+end
+
 --- Here we simply encode each document as a fixed-length vector 
 -- by computing the unweighted average of its word vectors.
 -- A slightly better approach would be to weight each word by its tf-idf value
@@ -48,16 +95,10 @@ function preprocess_data(raw_data, wordvector_table, opt)
     
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.inputDim, 1)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    -- stores the term frequency of a word for a particular document
-    local tf = {}
-    -- initially will store the number of documents each word appears in for calculating idf in the end
-    local idf = {}
-    -- will hold final tf-idf values to weight word vectors
-    local tf_idf = {}
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
-    
+
     for i=1,opt.nClasses do
         for j=1,opt.nTrainDocs+opt.nTestDocs do
             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
