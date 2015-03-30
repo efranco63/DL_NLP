@@ -38,8 +38,67 @@ function load_glove(path, inputDim)
     return glove_table
 end
 
-function calc_tfidf(raw_data,opt)
-    -- use torch.randperm to shuffle the data, since it's ordered by class in the file
+-- function calc_tfidf(raw_data,opt)
+--     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
+--     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
+    
+--     -- calculate tf-idfs for words in the corpus *******************************************************
+--     -- stores the term frequency of a word for a particular document
+--     local tf = {}
+--     -- initially will store the number of documents each word appears in for calculating idf in the end
+--     local idf = {}
+--     for i=1,opt.nClasses do
+--         for j=1,opt.nTrainDocs+opt.nTestDocs do
+--             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
+--             -- initialize dict entry for k-th document
+--             tf[k] = {}
+--             -- dictionary to keep track of which words have been seen for this document
+--             local seen = {}
+--             local doc_size = 0
+--             local index = raw_data.index[i][j]
+--             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
+--             for w in document:gmatch("%S+") do
+--                 local word = w:gsub("%p+", "")
+--                 doc_size = doc_size + 1
+--                 -- increment the count for this word for its tf
+--                 if tf[k][word] 
+--                     then tf[k][word] = tf[k][word] + 1
+--                     else tf[k][word] = 1
+--                 end
+--                 -- increment the count for this word for its idf if it hasn't already been seen in this doc
+--                 if not seen[word] then 
+--                     if idf[word] then idf[word] = idf[word] + 1 else idf[word] = 1 end
+--                 end
+--                 seen[word] = 1
+--             end
+--             tf[k]['doc_size'] = doc_size
+--             -- calculate term frequency for each word in this k-th document
+--             for key,val in pairs(tf[k]) do 
+--                 if key ~= 'doc_size' then
+--                     tf[k][key] = tf[k][key]/tf[k]['doc_size']
+--                 end
+--             end
+--         end
+--     end
+--     -- calculate idf for each word by taking log of total number of documents divided by number of 
+--     -- documents each word appears in
+--     for key,val in pairs(idf) do idf[key] = math.log((opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))/idf[key]) end
+
+--     return tf,idf,order
+
+-- end
+
+--- Here we simply encode each document as a fixed-length vector 
+-- by computing the unweighted average of its word vectors.
+-- A slightly better approach would be to weight each word by its tf-idf value
+-- before computing the bag-of-words average; this limits the effects of words like "the".
+-- Still better would be to concatenate the word vectors into a variable-length
+-- 2D tensor and train a more powerful convolutional or recurrent model on this directly.
+function preprocess_data(raw_data, wordvector_table, opt)
+    
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.inputDim, 1)
+    local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
     
     -- calculate tf-idfs for words in the corpus *******************************************************
@@ -84,20 +143,7 @@ function calc_tfidf(raw_data,opt)
     -- documents each word appears in
     for key,val in pairs(idf) do idf[key] = math.log((opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))/idf[key]) end
 
-    return tf,idf,order
-
-end
-
---- Here we simply encode each document as a fixed-length vector 
--- by computing the unweighted average of its word vectors.
--- A slightly better approach would be to weight each word by its tf-idf value
--- before computing the bag-of-words average; this limits the effects of words like "the".
--- Still better would be to concatenate the word vectors into a variable-length
--- 2D tensor and train a more powerful convolutional or recurrent model on this directly.
-function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
-    
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.inputDim, 1)
-    local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+    -- ***************************************************
 
     for i=1,opt.nClasses do
         for j=1,opt.nTrainDocs+opt.nTestDocs do
@@ -204,12 +250,12 @@ function main()
     print("Loading raw data...")
     local raw_data = torch.load(opt.dataPath)
 
-    print("Computing tf and idfs...")
-    -- order here is the shuffled order of the documents
-    local tf, idf, order = calc_tfidf(raw_data, opt)
+    -- print("Computing tf and idfs...")
+    -- -- order here is the shuffled order of the documents
+    -- local tf, idf, order = calc_tfidf(raw_data, opt)
     
     print("Computing document input representations...")
-    local processed_data, labels = preprocess_data(raw_data, glove_table, opt, tf, idf, order)
+    local processed_data, labels = preprocess_data(raw_data, glove_table, opt)
     
     -- split data into makeshift training and validation sets
     local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
