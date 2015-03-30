@@ -38,7 +38,7 @@ function load_glove(path, inputDim)
     return glove_table
 end
 
-function calc_tfidf(raw_data,wordvector_table, opt)
+function calc_tfidf(raw_data,opt)
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
     
@@ -57,7 +57,8 @@ function calc_tfidf(raw_data,wordvector_table, opt)
             local doc_size = 0
             local index = raw_data.index[i][j]
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
-            for word in document:gmatch("%S+") do
+            for w in document:gmatch("%S+") do
+                word = w:gsub("%p+", "")
                 doc_size = doc_size + 1
                 -- increment the count for this word for its tf
                 if tf[k][word] 
@@ -72,7 +73,11 @@ function calc_tfidf(raw_data,wordvector_table, opt)
             end
             tf[k]['doc_size'] = doc_size
             -- calculate term frequency for each word in this k-th document
-            for key,val in pairs(tf[k]) do tf[k][key] = tf[k][key]/tf[k]['doc_size'] end
+            for key,val in pairs(tf[k]) do 
+                if key ~= 'doc_size' then
+                    tf[k][key] = tf[k][key]/tf[k]['doc_size']
+                end
+            end
         end
     end
     -- calculate idf for each word by taking log of total number of documents divided by number of 
