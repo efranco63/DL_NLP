@@ -103,6 +103,7 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
         for j=1,opt.nTrainDocs+opt.nTestDocs do
             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
             
+            local seen = {}
             local doc_size = 1
             
             local index = raw_data.index[i][j]
