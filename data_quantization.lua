@@ -9,7 +9,7 @@ train = torch.load("/scratch/courses/DSGA1008/A3/data/train.t7b")
 function quantization(document,frame,length)
     document = document:lower()
     x = torch.Tensor(frame,length):fill(0)
-    for i = 1,document:len() do
+    for i = 1,length do
         character = document:sub(i,i)
         position = string.find(dictionary,character)
         if position ~= nil then
