@@ -19,11 +19,11 @@ function quantization(document,frame,length)
     return x
 end
 
-function gettensor(i,j, input, frame, length)
+function gettensor(i, j, frame, length)
     index = train.index[i][j]
     document = ffi.string(torch.data(train.content:narrow(1, index, 1)))
     -- x is input tensor [frame x length]
-    x = quantization(input, frame, length)
+    x = quantization(document, frame, length)
     return x
 end
 
@@ -33,4 +33,4 @@ end
 -- j=100
 -- frame = dictionary:len()
 -- length = 256
--- x = get_tensor(i,j)
+-- x = gettensor(i, j, frame, length)
