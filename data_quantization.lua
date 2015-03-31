@@ -13,7 +13,7 @@ function quantization(document,frame,length)
     -- make an empty tensor to hold the values
     x = torch.Tensor(frame,length):fill(0)
     -- will either scan the entire document or only go as far as length permits
-    for i = 1,math.min(input:len(), length) do
+    for i = 1,math.min(document:len(), length) do
         character = document:sub(i,i)
         position = string.find(dictionary,character)
         -- if the character is in the dictionary, add a 1 in its corresponding place in its vector
