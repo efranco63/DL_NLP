@@ -105,6 +105,7 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
             
             local seen = {}
             local doc_size = 1
+            local total_tfidf = 0
             
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
@@ -121,11 +122,12 @@ function preprocess_data(raw_data, wordvector_table, opt, tf, idf, order)
                         -- weight each word vector by its tf-idf value
                         data[k]:add(wordvector_table[w]:mul(tf_idf))
                         seen[word] = 1
+                        total_tfidf = total_tfidf + tf_idf
                     end
                 end
             end
 
-            data[k]:div(doc_size)
+            data[k]:div(total_tfidf)
             labels[k] = i
         end
     end
