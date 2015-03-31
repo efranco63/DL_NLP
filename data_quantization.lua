@@ -6,12 +6,17 @@ require 'string';
 dictionary = "abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:'\"/\\|_@#$%^&*~`+-=<>()[]{}"
 train = torch.load("/scratch/courses/DSGA1008/A3/data/train.t7b")
 
+-- function to transform a text of words into 69 (len of dictionary) x length 1-of-m encoded tensor
 function quantization(document,frame,length)
+    -- convert to all lower case
     document = document:lower()
+    -- make an empty tensor to hold the values
     x = torch.Tensor(frame,length):fill(0)
-    for i = 1,length do
+    -- will either scan the entire document or only go as far as length permits
+    for i = 1,math.min(input:len(), length) do
         character = document:sub(i,i)
         position = string.find(dictionary,character)
+        -- if the character is in the dictionary, add a 1 in its corresponding place in its vector
         if position ~= nil then
             x[position][i] = 1 
         end
