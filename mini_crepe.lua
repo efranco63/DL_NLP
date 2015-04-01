@@ -25,7 +25,7 @@ function preprocess_data(raw_data, opt)
             -- create empty tensor to hold quantized text
             local q = torch.Tensor(opt.frame,opt.length):fill(0)
             -- will either scan the entire document or only go as far as length permits
-            for c = 1,math.min(document:len(),length) do
+            for c = 1,math.min(document:len(),opt.length) do
 		        local character = document:sub(c,c)
 		        local position = string.find(dictionary,character)
 		        -- if the character is in the dictionary, add a 1 in its corresponding place in its vector
