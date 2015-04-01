@@ -56,7 +56,7 @@ function main()
     -- number of frames in the character vectors
     opt.frame = alphabet:len() 
     -- maximum character size of text document
-    opt.length = 200
+    opt.length = 1014
     -- training/test sizes
     opt.nTrainDocs = 20000
     opt.nTestDocs = 5000
@@ -76,25 +76,35 @@ function main()
     test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
     test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
 
-    -- -- construct model:
-    -- model = nn.Sequential()
-   
-    -- -- if you decide to just adapt the baseline code for part 2, you'll probably want to make this linear and remove pooling
-    -- model:add(nn.TemporalConvolution(1, 40, 10, 1))
-    
-    -- --------------------------------------------------------------------------------------
-    -- -- Replace this temporal max-pooling module with your log-exponential pooling module:
-    -- --------------------------------------------------------------------------------------
-    -- model:add(nn.TemporalMaxPooling(3, 1))
-    -- -- beta = 15
-    -- -- model:add(nn.TemporalLogExpPooling(3, 1, beta))
-    
-    -- -- 20*39
-    -- model:add(nn.Reshape(40*189, true))
-    -- model:add(nn.Linear(40*189, 5))
-    -- model:add(nn.LogSoftMax())
+    -- build model *****************************************************************************
+    model = nn.Sequential()
+    -- first layer (#alphabet x 1014)
+    model:add(nn.TemporalConvolution(opt.frame, 256, 7))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(3,3))
 
-    -- criterion = nn.ClassNLLCriterion()
+    -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
+    model:add(nn.TemporalConvolution(256, 256, 7))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(3,3))
+
+    -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
+    model:add(nn.Reshape(110*256))
+    model:add(nn.Linear(110*256,1024))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.5))
+
+    -- 2nd fully connected layer (1024)
+    model:add(nn.Linear(1024,1024))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.5))
+
+    -- final layer for classification
+    model:add(nn.Linear(1024,5))
+    model:add(nn.LogSoftMax())
+
+    print '==> define loss'
+	criterion = nn.ClassNLLCriterion()
    
     -- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
