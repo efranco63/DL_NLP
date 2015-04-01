@@ -74,7 +74,7 @@ function main()
     local raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
-    local processed_data, labels = preprocess_data(raw_data, opt, dictionary)
+    processed_data, labels = preprocess_data(raw_data, opt, dictionary)
     
     -- -- split data into makeshift training and validation sets
     -- local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
