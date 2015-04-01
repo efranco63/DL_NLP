@@ -59,30 +59,22 @@ function main()
     opt.length = 200
     -- training/test sizes
     opt.nTrainDocs = 20000
-    opt.nTestDocs = 0
+    opt.nTestDocs = 5000
     opt.nClasses = 5
-    -- SGD parameters
-    -- opt.nEpochs = 60
-    -- opt.minibatchSize = 128
-    -- opt.nBatches = math.floor(opt.nTrainDocs / opt.minibatchSize)
-    -- opt.learningRate = 0.1
-    -- opt.learningRateDecay = 0.001
-    -- opt.momentum = 0.1
-    -- opt.idx = 1
     
     print("Loading raw data...")
-    local raw_data = torch.load(opt.dataPath)
+    raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
     processed_data, labels = preprocess_data(raw_data, opt, dictionary)
-    
-    -- -- split data into makeshift training and validation sets
-    -- local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
-    -- local training_labels = labels:sub(1, opt.nClasses*opt.nTrainDocs):clone()
-    
-    -- -- make your own choices - here I have not created a separate test set
-    -- local test_data = training_data:clone() 
-    -- local test_labels = training_labels:clone()
+
+    print("Splitting data into training and validation sets...")
+    -- split data into makeshift training and validation sets
+    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+   
+    test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+    test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
 
     -- -- construct model:
     -- model = nn.Sequential()
