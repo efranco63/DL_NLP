@@ -54,7 +54,7 @@ function main()
 
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- number of frames in the character vectors
-    opt.frame = dictionary:len() 
+    opt.frame = alphabet:len() 
     -- maximum character size of text document
     opt.length = 200
     -- training/test sizes
