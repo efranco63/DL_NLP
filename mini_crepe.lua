@@ -6,7 +6,7 @@ require 'string'
 ffi = require('ffi')
 
 -- function to read in raw document data and convert to quantized vectors
-function preprocess_data(raw_data, opt)
+function preprocess_data(raw_data, opt, dictionary)
     
     -- create empty tensors that will hold quantized data and labels
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.frame, opt.length)
@@ -24,13 +24,11 @@ function preprocess_data(raw_data, opt)
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             -- create empty tensor to hold quantized text
             local q = torch.Tensor(opt.frame,opt.length):fill(0)
+
             -- will either scan the entire document or only go as far as length permits
             for c = 1,math.min(document:len(),opt.length) do
-		        local character = document:sub(c,c)
-		        local position = string.find(dictionary,character)
-		        -- if the character is in the dictionary, add a 1 in its corresponding place in its vector
-		        if position ~= nil then
-		            q[position][c] = 1 
+		        if dictionary[document:sub(c,c)] then
+		        	q[dictionary[document:sub(c,c)]][c] = 1
 		        end
 		    end
 
@@ -45,7 +43,12 @@ end
 function main()
 
     -- define the character dictionary
-    dictionary = "abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:'\"/\\|_@#$%^&*~`+-=<>()[]{}"
+    local alphabet =  "abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:'\"/\\|_@#$%^&*~`+-=<>()[]{}"
+    local dictionary = {}
+    for i = 1,#alphabet do
+    	dictionary[alphabet:sub(i,i)] = i
+    end
+
     -- Configuration parameters
     opt = {}
 
@@ -71,7 +74,7 @@ function main()
     local raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
-    local processed_data, labels = preprocess_data(raw_data, opt)
+    local processed_data, labels = preprocess_data(raw_data, opt, dictionary)
     
     -- -- split data into makeshift training and validation sets
     -- local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
