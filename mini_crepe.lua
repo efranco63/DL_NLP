@@ -78,58 +78,58 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+	targets = torch.zeros(opt.batchSize):cuda()
+
 	-- do one epoch
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
 		-- xlua.progress(t, training_data:size(1))
+		inputs:zero()
+		targets:zero()
 
 		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
-			inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
-			targets = torch.zeros(opt.batchSize):cuda()
-			xx = opt.batchSize
+			-- xx = opt.batchSize
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
-		else
-			inputs = torch.zeros(training_data:size(1) - t + 1,opt.length,opt.frame):cuda()
-			targets = torch.zeros(training_data:size(1) - t + 1):cuda()
-			xx = training_data:size(1) - t
-			inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
-			targets[{}] = training_labels[{ {t,training_data:size(1)} }]
-		end
-		-- create closure to evaluate f(X) and df/dX
-		local feval = function(x)
-			-- get new parameters
-			if x ~= parameters then
-				parameters:copy(x)
-			end
-			-- reset gradients
-			gradParameters:zero()
-			-- f is the average of all criterions
-			local f = 0
-			-- evaluate function for complete mini batch
-			-- estimate f
-			local output = model:forward(inputs)
-			local err = criterion:forward(output, targets)
-			f = f + err
-			-- estimate df/dW
-			local df_do = criterion:backward(output, targets)
-			model:backward(inputs, df_do)
-			-- update confusion
-			for k=1,xx do
-				confusion:add(output[k], targets[k])
-			end
-			-- return f and df/dX
-			return f,gradParameters
-		end
-
-		-- optimize on current mini-batch
-		optimMethod(feval, parameters, optimState)
-
-		inputs:zero()
-		targets:zero()
+		-- else
+		-- 	inputs = torch.zeros(training_data:size(1) - t + 1,opt.length,opt.frame):cuda()
+		-- 	targets = torch.zeros(training_data:size(1) - t + 1):cuda()
+		-- 	xx = training_data:size(1) - t
+		-- 	inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
+		-- 	targets[{}] = training_labels[{ {t,training_data:size(1)} }]
 		
+			-- create closure to evaluate f(X) and df/dX
+			local feval = function(x)
+				-- get new parameters
+				if x ~= parameters then
+					parameters:copy(x)
+				end
+				-- reset gradients
+				gradParameters:zero()
+				-- f is the average of all criterions
+				local f = 0
+				-- evaluate function for complete mini batch
+				-- estimate f
+				local output = model:forward(inputs)
+				local err = criterion:forward(output, targets)
+				f = f + err
+				-- estimate df/dW
+				local df_do = criterion:backward(output, targets)
+				model:backward(inputs, df_do)
+				-- update confusion
+				for k=1,opt.batchSize do
+					confusion:add(output[k], targets[k])
+				end
+				-- return f and df/dX
+				return f,gradParameters
+			end
+
+			-- optimize on current mini-batch
+			optimMethod(feval, parameters, optimState)
+		end
 	end
 
 	-- time taken
