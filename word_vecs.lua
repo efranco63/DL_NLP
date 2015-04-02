@@ -44,7 +44,7 @@ function load_glove(path, inputDim)
 end
 
 -- function to read in raw document data and convert to quantized vectors
-function preprocess_data(raw_data, opt, dictionary)
+function preprocess_data(raw_data, wordvector_table, opt)
     
     -- create empty tensors that will hold wordvector concatenations
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
@@ -218,7 +218,7 @@ function main()
     raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
-    processed_data, labels = preprocess_data(raw_data, opt, dictionary)
+    processed_data, labels = preprocess_data(raw_data, glove_table, opt)
 
     print("Splitting data into training and validation sets...")
     -- split data into makeshift training and validation sets
