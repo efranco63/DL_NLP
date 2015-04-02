@@ -103,7 +103,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
