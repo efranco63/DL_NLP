@@ -82,7 +82,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
-	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
+	print("\n==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
 		-- xlua.progress(t, training_data:size(1))
@@ -135,14 +135,14 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	-- time taken
 	time = sys.clock() - time
 	time = time / training_data:size(1)
-	print("\n==> time to learn 1 sample = " .. (time*1000) .. 'ms')
+	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
 	-- print confusion matrix
 	-- print(confusion)
 	confusion:updateValids()
 
 	-- print accuracy
-	print("\n==> training accuracy for epoch " .. epoch .. ':')
+	print("==> training accuracy for epoch " .. epoch .. ':')
 	print(confusion.totalValid*100)
 
 	-- save/log current net
@@ -183,11 +183,11 @@ function main()
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 8
+    opt.nEpochs = 20
     opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
-    opt.momentum = 0.1
+    opt.momentum = 0.9
     opt.weightDecay = 0
     
     print("Loading raw data...")
