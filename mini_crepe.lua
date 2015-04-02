@@ -78,28 +78,25 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
-	targets = torch.zeros(opt.batchSize):cuda()
-
 	-- do one epoch
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
 		-- xlua.progress(t, training_data:size(1))
 
-		inputs:zero()
-		targets:zero()
-
 		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
+			inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+			targets = torch.zeros(opt.batchSize):cuda()
 			xx = opt.batchSize
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
-		end 
-		if t + opt.batchSize-1 > training_data:size(1) then
+		else
+			inputs = torch.zeros(training_data:size(1) - t,opt.length,opt.frame):cuda()
+			targets = torch.zeros(training_data:size(1) - t):cuda()
 			xx = training_data:size(1) - t
-			inputs = training_data[{ {t,training_data:size(1)},{},{} }]:copy()
-			targets = training_labels[{ {t,training_data:size(1)} }]:copy()
+			inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
+			targets[{}] = training_labels[{ {t,training_data:size(1)} }]
 		end
 		-- create closure to evaluate f(X) and df/dX
 		local feval = function(x)
@@ -129,6 +126,9 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 		-- optimize on current mini-batch
 		optimMethod(feval, parameters, optimState)
+
+		inputs:zero()
+		targets:zero()
 		
 	end
 
@@ -183,7 +183,7 @@ function main()
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 10
+    opt.nEpochs = 5
     opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
