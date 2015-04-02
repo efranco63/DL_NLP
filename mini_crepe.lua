@@ -83,16 +83,20 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
 		-- xlua.progress(t, training_data:size(1))
+
 		-- create mini batch
+		inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+		targets = torch.zeros(opt.batchSize):cuda()
+
 		if t + opt.batchSize-1 <= training_data:size(1) then
 			xx = opt.batchSize
-			inputs = training_data[{ {t,t+opt.batchSize-1},{},{} }]:cuda()
-			targets = training_labels[{ {t,t+opt.batchSize-1} }]:cuda()
+			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
+			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		end 
 		if t + opt.batchSize-1 > training_data:size(1) then
 			xx = training_data:size(1) - t
-			inputs = training_data[{ {t,training_data:size(1)},{},{} }]:cuda()
-			targets = training_labels[{ {t,training_data:size(1)} }]:cuda()
+			inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
+			targets[{}] = training_labels[{ {t,training_data:size(1)} }]
 		end
 		-- create closure to evaluate f(X) and df/dX
 		local feval = function(x)
@@ -191,8 +195,8 @@ function main()
 
     print("Splitting data into training and validation sets...")
     -- split data into makeshift training and validation sets
-    local training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
-    local training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
     if opt.nTestDocs > 0 then
 	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
