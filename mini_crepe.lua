@@ -194,8 +194,10 @@ function main()
     local training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
     local training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    if opt.nTestDocs > 0 then
+	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+	    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+	end
 
     -- build model *****************************************************************************
     model = nn.Sequential()
