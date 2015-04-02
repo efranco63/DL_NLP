@@ -14,7 +14,7 @@ torch.manualSeed(1)
 function preprocess_data(raw_data, opt, dictionary)
     
     -- create empty tensors that will hold quantized data and labels
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.frame)
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.frame, opt.length)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -33,12 +33,12 @@ function preprocess_data(raw_data, opt, dictionary)
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             -- create empty tensor to hold quantized text
-            local q = torch.Tensor(opt.length,opt.frame):fill(0)
+            local q = torch.Tensor(opt.frame,opt.length):fill(0)
 
             -- will either scan the entire document or only go as far as length permits
             for c = 1,math.min(document:len(),opt.length) do
 		        if dictionary[document:sub(c,c)] then
-		        	q[c][dictionary[document:sub(c,c)]] = 1
+		        	q[dictionary[document:sub(c,c)]][c] = 1
 		        end
 		    end
 
@@ -75,7 +75,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.frame,opt.length):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -104,12 +104,12 @@ function train_model(model, criterion, training_data, training_labels, opt)
 				local f = 0
 				-- evaluate function for complete mini batch
 				-- estimate f
-				local output = model:forward(inputs)
+				local output = model:forward(inputs:transpose(2,3):contiguous())
 				local err = criterion:forward(output, targets)
 				f = f + err
 				-- estimate df/dW
 				local df_do = criterion:backward(output, targets)
-				model:backward(inputs, df_do)
+				model:backward(inputs:transpose(2,3):contiguous, df_do)
 				-- update confusion
 				for k=1,opt.batchSize do
 					confusion:add(output[k], targets[k])
@@ -169,7 +169,7 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 1000
+    opt.nTrainDocs = 500
     opt.nTestDocs = 0
     opt.nClasses = 5
 
