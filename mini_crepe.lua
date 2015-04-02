@@ -81,10 +81,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
-	-- for the iteration when samples left do not equal batch size
-	inputs_alt = torch.zeros(opt.batchSize-t,opt.length,opt.frame):cuda()
-	targets_alt = torch.zeros(opt.batchSize-t):cuda()
-
 	-- do one epoch
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
@@ -93,8 +89,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 		inputs:zero()
 		targets:zero()
-		inputs_alt:zero()
-		targets_alt:zero()
 
 		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
@@ -104,10 +98,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
 		end 
 		if t + opt.batchSize-1 > training_data:size(1) then
 			xx = training_data:size(1) - t
-			inputs_alt[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
-			targets_alt[{}] = training_labels[{ {t,training_data:size(1)} }]
-			inputs = inputs_alt:copy()
-			targets = targets_alt:copy()
+			inputs = training_data[{ {t,training_data:size(1)},{},{} }]:copy()
+			targets = training_labels[{ {t,training_data:size(1)} }]:copy()
 		end
 		-- create closure to evaluate f(X) and df/dX
 		local feval = function(x)
