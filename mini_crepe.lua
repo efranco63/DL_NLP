@@ -56,10 +56,6 @@ end
 
 function train_model(model, criterion, training_data, training_labels, opt)
 
-	-- CUDA
-	model:cuda()
-	criterion:cuda()
-
 	-- classes
 	classes = {'1','2','3','4','5'}
 
@@ -195,11 +191,11 @@ function main()
 
     print("Splitting data into training and validation sets...")
     -- split data into makeshift training and validation sets
-    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
-    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    local training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    local training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-    test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
 
     -- build model *****************************************************************************
     model = nn.Sequential()
@@ -229,6 +225,10 @@ function main()
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
+
+	-- CUDA
+	model:cuda()
+	criterion:cuda()
 
 	print("Training model...")
 	for i=1,opt.nEpochs do
