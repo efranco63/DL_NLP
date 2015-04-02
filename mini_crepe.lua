@@ -226,10 +226,10 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	print("Training model...")
-	for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-	end
+	-- print("Training model...")
+	-- for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+	-- end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
