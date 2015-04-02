@@ -178,14 +178,14 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 2000
+    opt.nTrainDocs = 1000
     opt.nTestDocs = 0
     opt.nClasses = 5
 
     -- training parameters
     opt.nEpochs = 50
     opt.batchSize = 128
-    opt.learningRate = 0.01
+    opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
