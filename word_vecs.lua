@@ -60,15 +60,13 @@ function preprocess_data(raw_data, wordvector_table, opt)
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
-            local wordcount = 0
-            local pointer = 1
+            local wordcount = 1
             -- break each review into words and concatenate into a vector thats of size length x inputDim
             for word in document:gmatch("%S+") do
-                if wordcount <= opt.length then
+                if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
-                        data[{ {k},{pointer},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
-                        pointer = pointer + 1
                     end
                 end
             end
