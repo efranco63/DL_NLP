@@ -78,16 +78,19 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
+	targets = torch.zeros(opt.batchSize):cuda()
+
 	-- do one epoch
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
 		-- xlua.progress(t, training_data:size(1))
 
-		-- create mini batch
-		inputs = torch.zeros(opt.batchSize,opt.length,opt.frame):cuda()
-		targets = torch.zeros(opt.batchSize):cuda()
+		inputs:zero()
+		targets:zero()
 
+		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
 			xx = opt.batchSize
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
