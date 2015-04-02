@@ -109,7 +109,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 				f = f + err
 				-- estimate df/dW
 				local df_do = criterion:backward(output, targets)
-				model:backward(inputs:transpose(2,3):contiguous, df_do)
+				model:backward(inputs:transpose(2,3):contiguous(), df_do)
 				-- update confusion
 				for k=1,opt.batchSize do
 					confusion:add(output[k], targets[k])
