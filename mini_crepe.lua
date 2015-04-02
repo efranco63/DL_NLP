@@ -14,7 +14,9 @@ torch.manualSeed(1)
 function preprocess_data(raw_data, opt, dictionary)
     
     -- create empty tensors that will hold quantized data and labels
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.frame, opt.length)
+    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.frame, opt.length)
+    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.frame)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -24,6 +26,7 @@ function preprocess_data(raw_data, opt, dictionary)
         for j=1,opt.nTrainDocs+opt.nTestDocs do
             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
 
+            -- for keeping track of progress
             if ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j)%10000 == 0 then
             	print("Quantizing document " .. ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j))
             end
@@ -32,12 +35,13 @@ function preprocess_data(raw_data, opt, dictionary)
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             -- create empty tensor to hold quantized text
-            local q = torch.Tensor(opt.frame,opt.length):fill(0)
+            -- local q = torch.Tensor(opt.frame,opt.length):fill(0)
+            local q = torch.Tensor(opt.length,opt.frame):fill(0)
 
             -- will either scan the entire document or only go as far as length permits
             for c = 1,math.min(document:len(),opt.length) do
 		        if dictionary[document:sub(c,c)] then
-		        	q[dictionary[document:sub(c,c)]][c] = 1
+		        	q[c][dictionary[document:sub(c,c)]] = 1
 		        end
 		    end
 
@@ -200,7 +204,7 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#alphabet x 1014)
-    model:add(nn.TemporalConvolution(opt.length, 256, 7))
+    model:add(nn.TemporalConvolution(opt.frame, 256, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
@@ -226,10 +230,10 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	print("Training model...")
-	for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-	end
+	-- print("Training model...")
+	-- for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+	-- end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
