@@ -2,8 +2,13 @@ require 'torch'
 require 'nn'
 require 'optim'
 require 'string'
+require 'xlua'
+require 'cunn'
 
 ffi = require('ffi')
+
+-- set seed for recreating tests
+torch.manualSeed(1)
 
 -- function to read in raw document data and convert to quantized vectors
 function preprocess_data(raw_data, opt, dictionary)
@@ -40,6 +45,108 @@ function preprocess_data(raw_data, opt, dictionary)
     return data, labels
 end
 
+
+function train_model(model, criterion, training_data, training_labels, opt)
+
+	-- CUDA
+	model:cuda()
+	criterion:cuda()
+
+	-- classes
+	classes = {'1','2','3','4','5'}
+
+	-- This matrix records the current confusion across classes
+	confusion = optim.ConfusionMatrix(classes)
+
+    parameters, grad_parameters = model:getParameters()
+
+    -- configure optimizer
+    optimState = {
+    	learningRate = opt.learningRate,
+    	weightDecay = opt.weightDecay,
+    	momentum = opt.momentum,
+    	learningRateDecay = opt.learningRateDecay
+    }
+    optimMethod = optim.sgd
+
+    epoch = epoch or 1
+	local time = sys.clock()
+
+	model:training()
+
+	-- do one epoch
+	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
+	for t = 1,training_data:size(1),opt.batchSize do
+		-- disp progress
+		xlua.progress(t, training_data:size(1))
+		-- create mini batch
+		if t + opt.batchSize-1 <= training_data:size(1) then
+			xx = opt.batchSize
+			inputs = training_data[{ {t,t+opt.batchSize-1},{},{} }]:cuda()
+			targets = training_labels[{ {t,t+opt.batchSize-1} }]:cuda()
+		end 
+		if t + opt.batchSize-1 > training_data:size(1) then
+			xx = training_data:size(1) - t
+			inputs = training_data[{ {t,training_data:size(1)},{},{} }]:cuda()
+			targets = training_labels[{ {t,training_data:size(1)} }]:cuda()
+		end
+		-- create closure to evaluate f(X) and df/dX
+		local feval = function(x)
+			-- get new parameters
+			if x ~= parameters then
+				parameters:copy(x)
+			end
+			-- reset gradients
+			gradParameters:zero()
+			-- f is the average of all criterions
+			local f = 0
+			-- evaluate function for complete mini batch
+			-- estimate f
+			local output = model:forward(inputs)
+			local err = criterion:forward(output, targets)
+			f = f + err
+			-- estimate df/dW
+			local df_do = criterion:backward(output, targets)
+			model:backward(inputs, df_do)
+			-- update confusion
+			for k=1,xx do
+				confusion:add(output[k], targets[k])
+			end
+			-- return f and df/dX
+			return f,gradParameters
+		end
+
+		-- optimize on current mini-batch
+		optimMethod(feval, parameters, optimState)
+		
+	end
+
+	-- time taken
+	time = sys.clock() - time
+	time = time / training_data:size(1)
+	print("\n==> time to learn 1 sample = " .. (time*1000) .. 'ms')
+
+	-- print confusion matrix
+	-- print(confusion)
+	confusion:updateValids()
+
+	-- print accuracy
+	print("\n==> training accuracy for epoch " .. epoch .. ':')
+	print(confusion.totalValid*100)
+
+	-- save/log current net
+	local filename = paths.concat(opt.save, 'model.net')
+	os.execute('mkdir -p ' .. sys.dirname(filename))
+	print('==> saving model to '..filename)
+	torch.save(filename, model)
+
+	-- next epoch
+	confusion:zero()
+	epoch = epoch + 1
+
+end
+
+
 function main()
 
     -- define the character dictionary
@@ -53,6 +160,8 @@ function main()
     opt = {}
 
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
+    -- path to save model to
+    opt.save = "results"
     -- number of frames in the character vectors
     opt.frame = alphabet:len() 
     -- maximum character size of text document
@@ -61,6 +170,14 @@ function main()
     opt.nTrainDocs = 20000
     opt.nTestDocs = 5000
     opt.nClasses = 5
+
+    -- training parameters
+    opt.nEpochs = 10
+    opt.batchSize = 128
+    opt.learningRate = 0.01
+    opt.learningRateDecay = 1e-5
+    opt.momentum = 0.1
+    opt.weightDecay = 0
     
     print("Loading raw data...")
     raw_data = torch.load(opt.dataPath)
@@ -103,10 +220,12 @@ function main()
     model:add(nn.Linear(1024,5))
     model:add(nn.LogSoftMax())
 
-    print '==> define loss'
 	criterion = nn.ClassNLLCriterion()
-   
-    -- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
+
+	print("Training model...")
+	for i=1,opt.nEpochs = 10 do
+		train_model(model, criterion, training_data, training_labels, opt)
+	end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
