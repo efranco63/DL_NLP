@@ -200,7 +200,7 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#alphabet x 1014)
-    model:add(nn.TemporalConvolution(opt.frame, 256, 7))
+    model:add(nn.TemporalConvolution(opt.length, 256, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
@@ -226,10 +226,10 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	-- print("Training model...")
-	-- for i=1,opt.nEpochs do
-	-- 	train_model(model, criterion, training_data, training_labels, opt)
-	-- end
+	print("Training model...")
+	for i=1,opt.nEpochs do
+		train_model(model, criterion, training_data, training_labels, opt)
+	end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
