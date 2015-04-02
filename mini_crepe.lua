@@ -92,8 +92,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		else
-			inputs = torch.zeros(training_data:size(1) - t,opt.length,opt.frame):cuda()
-			targets = torch.zeros(training_data:size(1) - t):cuda()
+			inputs = torch.zeros(training_data:size(1) - t + 1,opt.length,opt.frame):cuda()
+			targets = torch.zeros(training_data:size(1) - t + 1):cuda()
 			xx = training_data:size(1) - t
 			inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
 			targets[{}] = training_labels[{ {t,training_data:size(1)} }]
