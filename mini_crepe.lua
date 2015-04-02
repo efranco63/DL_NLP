@@ -62,7 +62,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	-- This matrix records the current confusion across classes
 	confusion = optim.ConfusionMatrix(classes)
 
-    parameters, grad_parameters = model:getParameters()
+    parameters,gradParameters = model:getParameters()
 
     -- configure optimizer
     optimState = {
