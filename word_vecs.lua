@@ -46,7 +46,7 @@ end
 -- function to read in raw document data and convert to quantized vectors
 function preprocess_data(raw_data, opt, dictionary)
     
-    -- create empty tensors that will hold quantized data and labels
+    -- create empty tensors that will hold wordvector concatenations
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
@@ -67,39 +67,12 @@ function preprocess_data(raw_data, opt, dictionary)
                 if wordcount <= opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
                         data[{ {k},{pointer},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        wordcount = wordcount + 1
+                        pointer = pointer + 1
                     end
                 end
             end
 
-            data[k]:div(doc_size)
-            labels[k] = i
-        end
-    end
-
-    for i=1,opt.nClasses do
-        for j=1,opt.nTrainDocs+opt.nTestDocs do
-            local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
-
-            -- for keeping track of progress
-            if ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j)%10000 == 0 then
-            	print("Quantizing document " .. ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j))
-            end
-
-            local index = raw_data.index[i][j]
-            -- standardize to all lowercase
-            local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
-            -- create empty tensor to hold quantized text
-            -- local q = torch.Tensor(opt.frame,opt.length):fill(0)
-            local q = torch.Tensor(opt.length,opt.frame):fill(0)
-
-            -- will either scan the entire document or only go as far as length permits
-            for c = 1,math.min(document:len(),opt.length) do
-		        if dictionary[document:sub(c,c)] then
-		        	q[c][dictionary[document:sub(c,c)]] = 1
-		        end
-		    end
-
-            data[k] = q
             labels[k] = i
         end
     end
@@ -212,90 +185,90 @@ function train_model(model, criterion, training_data, training_labels, opt)
 end
 
 
--- function main()
+function main()
 
---     -- Configuration parameters
---     opt = {}
---     -- word vector dimensionality
---     opt.inputDim = 50
---     -- paths to glovee vectors and raw data
---     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
---     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
---     -- path to save model to
---     opt.save = "results"
---     -- maximum number of words per text document
---     opt.length = 100
---     -- training/test sizes
---     opt.nTrainDocs = 1000
---     opt.nTestDocs = 0
---     opt.nClasses = 5
+    -- Configuration parameters
+    opt = {}
+    -- word vector dimensionality
+    opt.inputDim = 50
+    -- paths to glovee vectors and raw data
+    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
+    opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
+    -- path to save model to
+    opt.save = "results"
+    -- maximum number of words per text document
+    opt.length = 100
+    -- training/test sizes
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 0
+    opt.nClasses = 5
 
---     -- training parameters
---     opt.nEpochs = 5
---     opt.batchSize = 128
---     opt.learningRate = 0.1
---     opt.learningRateDecay = 1e-5
---     opt.momentum = 0.9
---     opt.weightDecay = 0
+    -- training parameters
+    opt.nEpochs = 5
+    opt.batchSize = 128
+    opt.learningRate = 0.1
+    opt.learningRateDecay = 1e-5
+    opt.momentum = 0.9
+    opt.weightDecay = 0
 
---     print("Loading word vectors...")
---     local glove_table = load_glove(opt.glovePath, opt.inputDim)
+    print("Loading word vectors...")
+    local glove_table = load_glove(opt.glovePath, opt.inputDim)
     
---     print("Loading raw data...")
---     raw_data = torch.load(opt.dataPath)
+    print("Loading raw data...")
+    raw_data = torch.load(opt.dataPath)
     
---     print("Computing document input representations...")
---     processed_data, labels = preprocess_data(raw_data, opt, dictionary)
+    print("Computing document input representations...")
+    processed_data, labels = preprocess_data(raw_data, opt, dictionary)
 
---     print("Splitting data into training and validation sets...")
---     -- split data into makeshift training and validation sets
---     training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
---     training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    print("Splitting data into training and validation sets...")
+    -- split data into makeshift training and validation sets
+    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
---     if opt.nTestDocs > 0 then
--- 	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
--- 	    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
--- 	end
+    if opt.nTestDocs > 0 then
+	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+	    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+	end
 
---     -- build model *****************************************************************************
---     model = nn.Sequential()
---     -- first layer (#alphabet x 1014)
---     model:add(nn.TemporalConvolution(opt.frame, 256, 7))
---     model:add(nn.Threshold())
---     model:add(nn.TemporalMaxPooling(3,3))
+    -- build model *****************************************************************************
+    model = nn.Sequential()
+    -- first layer (#alphabet x 1014)
+    model:add(nn.TemporalConvolution(opt.frame, 256, 7))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(3,3))
 
---     -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
---     model:add(nn.TemporalConvolution(256, 256, 7))
---     model:add(nn.Threshold())
---     model:add(nn.TemporalMaxPooling(3,3))
+    -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
+    model:add(nn.TemporalConvolution(256, 256, 7))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(3,3))
 
---     -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
---     model:add(nn.Reshape(110*256))
---     model:add(nn.Linear(110*256,1024))
---     model:add(nn.Threshold())
---     model:add(nn.Dropout(0.5))
+    -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
+    model:add(nn.Reshape(110*256))
+    model:add(nn.Linear(110*256,1024))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.5))
 
---     -- 2nd fully connected layer (1024)
---     model:add(nn.Linear(1024,1024))
---     model:add(nn.Threshold())
---     model:add(nn.Dropout(0.5))
+    -- 2nd fully connected layer (1024)
+    model:add(nn.Linear(1024,1024))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.5))
 
---     -- final layer for classification
---     model:add(nn.Linear(1024,5))
---     model:add(nn.LogSoftMax())
+    -- final layer for classification
+    model:add(nn.Linear(1024,5))
+    model:add(nn.LogSoftMax())
 
--- 	criterion = nn.ClassNLLCriterion()
+	criterion = nn.ClassNLLCriterion()
 
--- 	-- CUDA
--- 	model:cuda()
--- 	criterion:cuda()
+	-- CUDA
+	model:cuda()
+	criterion:cuda()
 
--- 	print("Training model...")
--- 	for i=1,opt.nEpochs do
--- 		train_model(model, criterion, training_data, training_labels, opt)
--- 	end
---     -- local results = test_model(model, test_data, test_labels)
---     -- print(results)
--- end
+	print("Training model...")
+	for i=1,opt.nEpochs do
+		train_model(model, criterion, training_data, training_labels, opt)
+	end
+    -- local results = test_model(model, test_data, test_labels)
+    -- print(results)
+end
 
--- main()
+main()
