@@ -24,6 +24,10 @@ function preprocess_data(raw_data, opt, dictionary)
         for j=1,opt.nTrainDocs+opt.nTestDocs do
             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
 
+            if ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j)%10000 == 0 then
+            	print("Quantizing document " .. ((i-1)*(opt.nTrainDocs+opt.nTestDocs) + j))
+            end
+
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
@@ -167,8 +171,8 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 20000
-    opt.nTestDocs = 5000
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 500
     opt.nClasses = 5
 
     -- training parameters
