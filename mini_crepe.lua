@@ -82,7 +82,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print("==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
 	for t = 1,training_data:size(1),opt.batchSize do
 		-- disp progress
-		xlua.progress(t, training_data:size(1))
+		-- xlua.progress(t, training_data:size(1))
 		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
 			xx = opt.batchSize
@@ -171,7 +171,7 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 10000
+    opt.nTrainDocs = 15000
     opt.nTestDocs = 0
     opt.nClasses = 5
 
