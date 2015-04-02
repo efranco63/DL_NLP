@@ -14,8 +14,6 @@ torch.manualSeed(1)
 function preprocess_data(raw_data, opt, dictionary)
     
     -- create empty tensors that will hold quantized data and labels
-    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.frame, opt.length)
-    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.frame)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
@@ -35,7 +33,6 @@ function preprocess_data(raw_data, opt, dictionary)
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             -- create empty tensor to hold quantized text
-            -- local q = torch.Tensor(opt.frame,opt.length):fill(0)
             local q = torch.Tensor(opt.length,opt.frame):fill(0)
 
             -- will either scan the entire document or only go as far as length permits
@@ -94,12 +91,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			-- xx = opt.batchSize
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
-		-- else
-		-- 	inputs = torch.zeros(training_data:size(1) - t + 1,opt.length,opt.frame):cuda()
-		-- 	targets = torch.zeros(training_data:size(1) - t + 1):cuda()
-		-- 	xx = training_data:size(1) - t
-		-- 	inputs[{}] = training_data[{ {t,training_data:size(1)},{},{} }]
-		-- 	targets[{}] = training_labels[{ {t,training_data:size(1)} }]
 		
 			-- create closure to evaluate f(X) and df/dX
 			local feval = function(x)
