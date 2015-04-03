@@ -147,6 +147,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 end
 
+-- training function as it appears in the baseline code
 -- function train_model(model, criterion, data, labels, test_data, test_labels, opt)
 
 -- 	model:cuda()
