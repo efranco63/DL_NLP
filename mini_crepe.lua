@@ -251,7 +251,7 @@ function main()
     -- number of frames in the character vectors
     opt.frame = alphabet:len() 
     -- maximum character size of text document
-    opt.length = 1014/2
+    opt.length = 1014
     -- training/test sizes
     opt.nTrainDocs = 500
     opt.nTestDocs = 0
@@ -298,8 +298,8 @@ function main()
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
-    model:add(nn.Reshape(53*256))
-    model:add(nn.Linear(53*256,1024))
+    model:add(nn.Reshape(110*256))
+    model:add(nn.Linear(110*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
@@ -321,9 +321,9 @@ function main()
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
-	for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-	end
+	-- for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+	-- end
     
 end
 
