@@ -179,7 +179,7 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
             -- print("epoch: ", epoch, " batch: ", batch)
         end
 
-        local accuracy = test_model(model, test_data:transpose(2,3):contiguous(), test_labels, opt)
+        local accuracy = test_model(model, test_data, test_labels, opt)
         print("epoch ", epoch, " error: ", accuracy)
 
     end
