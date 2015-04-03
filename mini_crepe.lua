@@ -198,6 +198,22 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
 end
 
 function test_model(model, data, labels, opt)
+
+	model:evaluate()
+
+	t_input = torch.zeros(opt.frame, opt.length):cuda()
+	t_labels = torch.zeros(1):cuda()
+	-- test over test data
+	for t = 1,data:size(1) do
+		t_input:zero()
+		t_labels:zero()
+		local t_input[{}] = data[t]
+		local t_labels[{}] = labels[t]
+		local pred = model:forward(t_input:transpose(1,2):contiguous())
+		confusion:add(pred, t_labels[1])
+	end
+	print(confusion)
+	confusion:zero()
     
     -- model:float()
     -- model:evaluate()
@@ -212,25 +228,6 @@ function test_model(model, data, labels, opt)
     -- model:cuda()
 
     -- return err
-
-    -- set model to evaluate mode (for modules that differ in training and testing, like Dropout)
-    model:evaluate()
-
-    t_input = torch.zeros(opt.frame, opt.length):cuda()
-    t_labels = torch.zeros(1):cuda()
-    -- test over test data
-    for t = 1,data:size(1) do
-    	t_input:zero()
-    	t_labels:zero()
-    	-- get new sample
-    	local t_input[{}] = data[t]
-    	local t_labels[{}] = labels[t]
-    	-- test sample
-    	local pred = model:forward(t_input:transpose(1,2):contiguous())
-    	confusion:add(pred, t_labels[1])
-    end
-    print(confusion)
-    confusion:zero()
 end
 
 
