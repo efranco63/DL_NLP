@@ -293,20 +293,20 @@ function main()
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
-    model:add(nn.TemporalConvolution(256, 256, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(3,3))
+    -- model:add(nn.TemporalConvolution(256, 256, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
-    model:add(nn.Reshape(110*256))
-    model:add(nn.Linear(110*256,1024))
+    model:add(nn.Reshape(336*256))
+    model:add(nn.Linear(336*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
     -- 2nd fully connected layer (1024)
-    model:add(nn.Linear(1024,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.5))
+    -- model:add(nn.Linear(1024,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
