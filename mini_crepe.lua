@@ -211,8 +211,9 @@ function main()
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 50
+    opt.nEpochs = 10
     opt.batchSize = 128
+    opt.nBatches = math.floor(opt.nTrainDocs / opt.minibatchSize)
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
