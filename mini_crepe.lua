@@ -216,16 +216,17 @@ function test_model(model, data, labels, opt)
     -- test over test data
     print('==> testing on test set:')
     for t = 1,test:size() do
-    -- disp progress
-    xlua.progress(t, test:size())
-    -- get new sample
-    local input = test.data[t]
-    input = input:cuda()
-    local target = test.labels[t]
-    -- test sample
-    local pred = model:forward(input)
-    -- print("\n" .. target .. "\n")
-    confusion:add(pred, target)
+	    -- disp progress
+	    xlua.progress(t, test:size())
+	    -- get new sample
+	    local input = test.data[t]
+	    input = input:cuda()
+	    local target = test.labels[t]
+	    -- test sample
+	    local pred = model:forward(input)
+	    -- print("\n" .. target .. "\n")
+	    confusion:add(pred, target)
+	end	 
 end
 
 
