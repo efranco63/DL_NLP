@@ -253,12 +253,12 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 500
+    opt.nTrainDocs = 2000
     opt.nTestDocs = 0
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 10
+    opt.nEpochs = 20
     opt.batchSize = 128
     opt.nBatches = math.floor(opt.nTrainDocs / opt.batchSize)
     opt.learningRate = 0.1
@@ -292,10 +292,10 @@ function main()
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
-    second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
-    model:add(nn.TemporalConvolution(256, 256, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(3,3))
+    -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
+    -- model:add(nn.TemporalConvolution(256, 256, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (110x256) 110 = (330 - 7 / 1 + 1) / 3
     model:add(nn.Reshape(336*256))
@@ -304,9 +304,9 @@ function main()
     model:add(nn.Dropout(0.5))
 
     -- 2nd fully connected layer (1024)
-    model:add(nn.Linear(1024,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.5))
+    -- model:add(nn.Linear(1024,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
