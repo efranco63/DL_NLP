@@ -151,8 +151,8 @@ end
 
 function train_model(model, criterion, data, labels, test_data, test_labels, opt)
 
-	-- model:cuda()
-	-- criterion:cuda()
+	model:cuda()
+	criterion:cuda()
 
     parameters, grad_parameters = model:getParameters()
 
@@ -191,20 +191,17 @@ end
 
 function test_model(model, data, labels, opt)
     
-    -- model:float()
+    model:float()
     model:evaluate()
-    -- data_t = data:clone()
-    -- data_t:double()
-    print(#data)
 
-    local pred = model:forward(data)
+    local pred = model:forward(data:transpose(2,3):float())
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
     --local debugger = require('fb.debugger')
     --debugger.enter()
 
-    -- model:cuda()
+    model:cuda()
 
     return err
 end
@@ -290,9 +287,6 @@ function main()
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
-
-	model:cuda()
-	criterion:cuda()
 
 	print("Training model...")
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
