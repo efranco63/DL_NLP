@@ -150,6 +150,9 @@ end
 
 function train_model(model, criterion, data, labels, test_data, test_labels, opt)
 
+	model:cuda()
+	criterion:cuda()
+
     parameters, grad_parameters = model:getParameters()
 
     minibatch = torch.zeros(opt.batchSize, opt.frame, opt.length):cuda()
@@ -187,6 +190,7 @@ end
 
 function test_model(model, data, labels, opt)
     
+    model:float()
     model:evaluate()
 
     local pred = model:forward(data)
@@ -195,6 +199,8 @@ function test_model(model, data, labels, opt)
 
     --local debugger = require('fb.debugger')
     --debugger.enter()
+
+    model:cuda()
 
     return err
 end
@@ -280,10 +286,6 @@ function main()
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
-
-	-- CUDA
-	model:cuda()
-	criterion:cuda()
 
 	print("Training model...")
 	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
