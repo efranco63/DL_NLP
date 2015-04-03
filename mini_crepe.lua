@@ -196,7 +196,7 @@ function test_model(model, data, labels, opt)
     -- data_t:double()
     -- print(#data_t)
 
-    local pred = model:forward(data:double())
+    local pred = model:forward(data)
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
@@ -255,6 +255,8 @@ function main()
    
     test_data = training_data:clone()
     test_labels = training_labels:clone()
+
+    test_data:double()
 
  --    if opt.nTestDocs > 0 then
 	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
