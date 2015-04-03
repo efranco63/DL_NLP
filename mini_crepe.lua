@@ -191,19 +191,35 @@ end
 
 function test_model(model, data, labels, opt)
     
-    model:float()
+    -- model:float()
+    -- model:evaluate()
+
+    -- local pred = model:forward(data:transpose(2,3):float())
+    -- local _, argmax = pred:max(2)
+    -- local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
+
+    -- --local debugger = require('fb.debugger')
+    -- --debugger.enter()
+
+    -- model:cuda()
+
+    -- return err
+
+    -- set model to evaluate mode (for modules that differ in training and testing, like Dropout)
     model:evaluate()
-
-    local pred = model:forward(data:transpose(2,3):float())
-    local _, argmax = pred:max(2)
-    local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
-
-    --local debugger = require('fb.debugger')
-    --debugger.enter()
-
-    model:cuda()
-
-    return err
+    -- test over test data
+    print('==> testing on test set:')
+    for t = 1,test:size() do
+    -- disp progress
+    xlua.progress(t, test:size())
+    -- get new sample
+    local input = test.data[t]
+    input = input:cuda()
+    local target = test.labels[t]
+    -- test sample
+    local pred = model:forward(input)
+    -- print("\n" .. target .. "\n")
+    confusion:add(pred, target)
 end
 
 
@@ -288,10 +304,10 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	print("Training model...")
-	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
-    local results = test_model(model, test_data, test_labels)
-    print(results)
+	-- print("Training model...")
+	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
+ --    local results = test_model(model, test_data, test_labels)
+ --    print(results)
 	-- for i=1,opt.nEpochs do
 	-- 	train_model(model, criterion, training_data, training_labels, opt)
 	-- end
