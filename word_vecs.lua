@@ -207,7 +207,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 100
+    opt.inputDim = 200
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
