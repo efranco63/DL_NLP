@@ -192,9 +192,9 @@ function test_model(model, data, labels, opt)
     
     model:float()
     model:evaluate()
-    print(#data)
+    data_t = data:clone():double()
 
-    local pred = model:forward(data)
+    local pred = model:forward(data_t)
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
