@@ -192,7 +192,8 @@ function test_model(model, data, labels, opt)
     
     model:float()
     model:evaluate()
-    data_t = data:clone():double()
+    data_t = data:clone()
+    data_t:float()
     print(#data_t)
 
     local pred = model:forward(data_t)
