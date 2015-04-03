@@ -9,7 +9,7 @@ ffi = require('ffi')
 
 -- set seed for recreating tests
 torch.manualSeed(1)
-torch.setdefaulttensortype(torch.DoubleTensor)
+torch.setdefaulttensortype('torch.DoubleTensor')
 
 -- function to read in raw document data and convert to quantized vectors
 function preprocess_data(raw_data, opt, dictionary)
