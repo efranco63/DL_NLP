@@ -191,12 +191,12 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 1000
+    opt.nTrainDocs = 2000
     opt.nTestDocs = 0
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 5
+    opt.nEpochs = 20
     opt.batchSize = 128
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
@@ -230,20 +230,20 @@ function main()
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (48x256) 48 = (100 - 5 / 1 + 1) / 2
-    model:add(nn.TemporalConvolution(256, 256, 5))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(2,2))
+    -- model:add(nn.TemporalConvolution(256, 256, 5))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (22x256) 22 = (48 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(22*256))
-    model:add(nn.Linear(22*256,1024))
+    model:add(nn.Reshape(48*256))
+    model:add(nn.Linear(48*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
     -- 2nd fully connected layer (1024)
-    model:add(nn.Linear(1024,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.5))
+    -- model:add(nn.Linear(1024,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
