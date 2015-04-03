@@ -257,9 +257,6 @@ function main()
     test_data = training_data:clone()
     test_labels = training_labels:clone()
 
-    print(#training_data)
-    print(#test_data)
-
  --    if opt.nTestDocs > 0 then
 	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
 	--     local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
@@ -298,9 +295,9 @@ function main()
 	criterion:cuda()
 
 	print("Training model...")
-	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
-    local results = test_model(model, test_data, test_labels)
-    print(results)
+	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
+ --    local results = test_model(model, test_data, test_labels)
+ --    print(results)
 	-- for i=1,opt.nEpochs do
 	-- 	train_model(model, criterion, training_data, training_labels, opt)
 	-- end
