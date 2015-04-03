@@ -192,11 +192,11 @@ function test_model(model, data, labels, opt)
     
     model:float()
     model:evaluate()
-    data_t = data:clone()
-    data_t:double()
-    print(#data_t)
+    -- data_t = data:clone()
+    -- data_t:double()
+    -- print(#data_t)
 
-    local pred = model:forward(data_t)
+    local pred = model:forward(data:double())
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
@@ -290,10 +290,10 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	-- print("Training model...")
-	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
- --    local results = test_model(model, test_data, test_labels)
- --    print(results)
+	print("Training model...")
+	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
+    local results = test_model(model, test_data, test_labels)
+    print(results)
 	-- for i=1,opt.nEpochs do
 	-- 	train_model(model, criterion, training_data, training_labels, opt)
 	-- end
