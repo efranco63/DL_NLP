@@ -254,12 +254,12 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 2000
-    opt.nTestDocs = 0
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 500
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 20
+    opt.nEpochs = 40
     opt.batchSize = 128
     opt.nBatches = math.floor(opt.nTrainDocs / opt.batchSize)
     opt.learningRate = 0.1
@@ -278,13 +278,13 @@ function main()
     training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
     training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    test_data = training_data:clone()
-    test_labels = training_labels:clone()
+    -- test_data = training_data:clone()
+    -- test_labels = training_labels:clone()
 
- --    if opt.nTestDocs > 0 then
-	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-	--     local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
-	-- end
+    if opt.nTestDocs > 0 then
+	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+	    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+	end
 
     -- build model *****************************************************************************
     model = nn.Sequential()
@@ -322,9 +322,10 @@ function main()
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
-	for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-	end
+	-- for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+ --        test_model
+	-- end
     
 end
 
