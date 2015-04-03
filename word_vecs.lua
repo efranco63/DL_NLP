@@ -217,7 +217,7 @@ function main()
     opt.length = 100
     -- training/test sizes
     opt.nTrainDocs = 5000
-    opt.nTestDocs = 0
+    opt.nTestDocs = 1000
     opt.nClasses = 5
 
     -- training parameters
