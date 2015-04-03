@@ -164,9 +164,9 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
         minibatch_labels[{}] = labels[{ {opt.idx,opt.idx+opt.batchSize-1} }]
         
         model:training()
-        local minibatch_loss = criterion:forward(model:forward(minibatch), minibatch_labels)
+        local minibatch_loss = criterion:forward(model:forward(minibatch:transpose(2,3):contiguous()), minibatch_labels)
         model:zeroGradParameters()
-        model:backward(minibatch, criterion:backward(model.output, minibatch_labels))
+        model:backward(minibatch:transpose(2,3):contiguous(), criterion:backward(model.output, minibatch_labels))
         
         return minibatch_loss, grad_parameters
     end
