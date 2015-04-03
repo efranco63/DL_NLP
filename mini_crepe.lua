@@ -189,8 +189,10 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
             -- print("epoch: ", epoch, " batch: ", batch)
         end
 
-        local accuracy = test_model(model, test_data, test_labels, opt)
-        print("epoch ", epoch, " error: ", accuracy)
+        print("==> testing on test set for epoch " .. epoch .. "")
+        test_model(model, test_data, test_labels, opt)
+        -- local accuracy = test_model(model, test_data, test_labels, opt)
+        -- print("epoch ", epoch, " error: ", accuracy)
 
     end
 end
@@ -217,7 +219,6 @@ function test_model(model, data, labels, opt)
     t_input = torch.zeros(opt.frame, opt.length):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
-    print('==> testing on test set:')
     for t = 1,data:size(1) do
     	t_input:zero()
     	t_labels:zero()
