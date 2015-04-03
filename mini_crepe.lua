@@ -330,10 +330,9 @@ function main()
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
-	for i=1,opt.nEpochs do
-        print("\nTraining model...")
+	print("\nTraining model...")
+    for i=1,opt.nEpochs do
 		train_model(model, criterion, training_data, training_labels, opt)
-        print("Testing model...")
         test_model(model,test_data,test_labels,opt)
 	end
     
