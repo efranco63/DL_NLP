@@ -179,10 +179,24 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
             -- print("epoch: ", epoch, " batch: ", batch)
         end
 
-        local accuracy = test_model(model, test_data, test_labels, opt)
+        local accuracy = test_model(model, test_data:transpose(2,3):contiguous(), test_labels, opt)
         print("epoch ", epoch, " error: ", accuracy)
 
     end
+end
+
+function test_model(model, data, labels, opt)
+    
+    model:evaluate()
+
+    local pred = model:forward(data)
+    local _, argmax = pred:max(2)
+    local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
+
+    --local debugger = require('fb.debugger')
+    --debugger.enter()
+
+    return err
 end
 
 
