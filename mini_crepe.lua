@@ -185,6 +185,8 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
             -- print("epoch: ", epoch, " batch: ", batch)
         end
 
+        print("==> training accuracy for epoch " .. epoch .. "")
+        test_model(model, training_data, training_labels, opt)
         print("==> testing on test set for epoch " .. epoch .. "")
         test_model(model, test_data, test_labels, opt)
         -- local accuracy = test_model(model, test_data, test_labels, opt)
