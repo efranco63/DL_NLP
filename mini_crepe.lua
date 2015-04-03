@@ -104,12 +104,12 @@ function train_model(model, criterion, training_data, training_labels, opt)
 				local f = 0
 				-- evaluate function for complete mini batch
 				-- estimate f
-				local output = model:forward(inputs:transpose(2,3):contiguous())
+				local output = model:forward(inputs:transpose(2,3))
 				local err = criterion:forward(output, targets)
 				f = f + err
 				-- estimate df/dW
 				local df_do = criterion:backward(output, targets)
-				model:backward(inputs:transpose(2,3):contiguous(), df_do)
+				model:backward(inputs:transpose(2,3), df_do)
 				-- update confusion
 				for k=1,opt.batchSize do
 					confusion:add(output[k], targets[k])
@@ -207,7 +207,7 @@ function test_model(model, data, labels, opt)
 		t_labels:zero()
 		t_input[{}] = data[t]
 		t_labels[{}] = labels[t]
-		local pred = model:forward(t_input:transpose(1,2):contiguous())
+		local pred = model:forward(t_input:transpose(1,2))
 		confusion:add(pred, t_labels[1])
 	end
 	print(confusion)
@@ -277,8 +277,8 @@ function main()
     training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
     training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    -- test_data = training_data:clone()
-    -- test_labels = training_labels:clone()
+    test_data = training_data:clone()
+    test_labels = training_labels:clone()
 
  --    if opt.nTestDocs > 0 then
 	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
