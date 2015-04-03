@@ -54,6 +54,9 @@ end
 
 function train_model(model, criterion, training_data, training_labels, opt)
 
+	model:cuda()
+	criterion:cuda()
+
 	-- classes
 	classes = {'1','2','3','4','5'}
 
