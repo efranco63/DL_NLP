@@ -212,7 +212,7 @@ function test_model(model, data, labels, opt)
     confusion:updateValids()
 
     -- print accuracy
-    print("==> test accuracy for epoch " .. epoch .. ':')
+    -- print("==> test accuracy for epoch " .. epoch .. ':')
     -- print(confusion)
     print(confusion.totalValid*100)
 	confusion:zero()
