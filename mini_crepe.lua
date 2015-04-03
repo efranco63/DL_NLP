@@ -277,8 +277,8 @@ function main()
     training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
     training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    test_data = training_data:clone()
-    test_labels = training_labels:clone()
+    -- test_data = training_data:clone()
+    -- test_labels = training_labels:clone()
 
  --    if opt.nTestDocs > 0 then
 	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
