@@ -9,7 +9,6 @@ ffi = require('ffi')
 
 -- set seed for recreating tests
 torch.manualSeed(1)
-torch.setdefaulttensortype('torch.DoubleTensor')
 
 -- function to read in raw document data and convert to quantized vectors
 function preprocess_data(raw_data, opt, dictionary)
@@ -53,9 +52,6 @@ end
 
 
 function train_model(model, criterion, training_data, training_labels, opt)
-
-	model:cuda()
-	criterion:cuda()
 
 	-- classes
 	classes = {'1','2','3','4','5'}
@@ -132,20 +128,18 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	time = time / training_data:size(1)
 	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
-	-- print confusion matrix
-	-- print(confusion)
 	confusion:updateValids()
 
 	-- print accuracy
-	print("==> training accuracy for epoch " .. epoch .. ':')
+	-- print("==> training accuracy for epoch " .. epoch .. ':')
 	print(confusion)
 	-- print(confusion.totalValid*100)
 
 	-- save/log current net
-	local filename = paths.concat(opt.save, 'model.net')
-	os.execute('mkdir -p ' .. sys.dirname(filename))
-	print('==> saving model to '..filename)
-	torch.save(filename, model)
+	-- local filename = paths.concat(opt.save, 'model.net')
+	-- os.execute('mkdir -p ' .. sys.dirname(filename))
+	-- print('==> saving model to '..filename)
+	-- torch.save(filename, model)
 
 	-- next epoch
 	confusion:zero()
@@ -319,6 +313,9 @@ function main()
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
+
+	model:cuda()
+	criterion:cuda()
 
 	-- print("Training model...")
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
