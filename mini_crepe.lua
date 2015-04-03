@@ -207,8 +207,8 @@ function test_model(model, data, labels, opt)
 	for t = 1,data:size(1) do
 		t_input:zero()
 		t_labels:zero()
-		local t_input[{}] = data[t]
-		local t_labels[{}] = labels[t]
+		-- local t_input[{}] = data[t]
+		-- local t_labels[{}] = labels[t]
 		local pred = model:forward(t_input:transpose(1,2):contiguous())
 		confusion:add(pred, t_labels[1])
 	end
