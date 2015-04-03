@@ -9,6 +9,7 @@ ffi = require('ffi')
 
 -- set seed for recreating tests
 torch.manualSeed(1)
+torch.setdefaulttensortype(torch.DoubleTensor)
 
 -- function to read in raw document data and convert to quantized vectors
 function preprocess_data(raw_data, opt, dictionary)
@@ -150,8 +151,8 @@ end
 
 function train_model(model, criterion, data, labels, test_data, test_labels, opt)
 
-	model:cuda()
-	criterion:cuda()
+	-- model:cuda()
+	-- criterion:cuda()
 
     parameters, grad_parameters = model:getParameters()
 
@@ -190,7 +191,7 @@ end
 
 function test_model(model, data, labels, opt)
     
-    model:float()
+    -- model:float()
     model:evaluate()
     -- data_t = data:clone()
     -- data_t:double()
@@ -203,7 +204,7 @@ function test_model(model, data, labels, opt)
     --local debugger = require('fb.debugger')
     --debugger.enter()
 
-    model:cuda()
+    -- model:cuda()
 
     return err
 end
@@ -256,8 +257,6 @@ function main()
     test_data = training_data:clone()
     test_labels = training_labels:clone()
 
-    test_data:double()
-
  --    if opt.nTestDocs > 0 then
 	--     local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
 	--     local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
@@ -291,6 +290,9 @@ function main()
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
+
+	model:cuda()
+	criterion:cuda()
 
 	print("Training model...")
 	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
