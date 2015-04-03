@@ -199,35 +199,39 @@ end
 
 function test_model(model, data, labels, opt)
 
-	model:evaluate()
+	-- model:evaluate()
 
-	t_input = torch.zeros(opt.frame, opt.length):cuda()
-	t_labels = torch.zeros(1):cuda()
-	-- test over test data
-	for t = 1,data:size(1) do
-		t_input:zero()
-		t_labels:zero()
-		t_input[{}] = data[t]
-		t_labels[{}] = labels[t]
-		local pred = model:forward(t_input:transpose(1,2):contiguous())
-		confusion:add(pred, t_labels[1])
-	end
-	print(confusion)
-	confusion:zero()
+	-- t_input = torch.zeros(opt.frame, opt.length):cuda()
+	-- t_labels = torch.zeros(1):cuda()
+	-- -- test over test data
+	-- for t = 1,data:size(1) do
+	-- 	t_input:zero()
+	-- 	t_labels:zero()
+	-- 	t_input[{}] = data[t]
+	-- 	t_labels[{}] = labels[t]
+	-- 	local pred = model:forward(t_input:transpose(1,2):contiguous())
+	-- 	confusion:add(pred, t_labels[1])
+	-- end
+	-- print(confusion)
+	-- confusion:zero()
     
-    -- model:float()
-    -- model:evaluate()
+    model:evaluate()
 
-    -- local pred = model:forward(data:transpose(2,3):float())
-    -- local _, argmax = pred:max(2)
-    -- local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
+    t_data = torch.zeros(data:size()):cuda()
+    t_labels = torch.zeros(labels:size()):cuda()
 
-    -- --local debugger = require('fb.debugger')
-    -- --debugger.enter()
+    t_data[{}] = data
 
-    -- model:cuda()
+    local pred = model:forward(t_data:transpose(2,3):contiguous()
+    local _, argmax = pred:max(2)
+    local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
-    -- return err
+    --local debugger = require('fb.debugger')
+    --debugger.enter()
+
+    model:cuda()
+
+    return err
 end
 
 
@@ -312,8 +316,8 @@ function main()
 
 	criterion = nn.ClassNLLCriterion()
 
-	print("Training model...")
-	train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
+	-- print("Training model...")
+	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 	-- for i=1,opt.nEpochs do
