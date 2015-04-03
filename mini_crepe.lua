@@ -193,6 +193,7 @@ function test_model(model, data, labels, opt)
     model:float()
     model:evaluate()
     data_t = data:clone():double()
+    print(#data_t)
 
     local pred = model:forward(data_t)
     local _, argmax = pred:max(2)
