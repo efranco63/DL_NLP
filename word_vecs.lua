@@ -180,7 +180,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.frame, opt.length):cuda()
+    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -188,7 +188,7 @@ function test_model(model, data, labels, opt)
         t_labels:zero()
         t_input[{}] = data[t]
         t_labels[{}] = labels[t]
-        local pred = model:forward(t_input:transpose(1,2))
+        local pred = model:forward(t_input)
         confusion:add(pred, t_labels[1])
     end
     -- print(confusion)
