@@ -157,23 +157,48 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
 	-- print confusion matrix
-	print(confusion)
-	-- confusion:updateValids()
+	-- print(confusion)
+	confusion:updateValids()
 
 	-- print accuracy
-	-- print("==> training accuracy for epoch " .. epoch .. ':')
-	-- print(confusion.totalValid*100)
+	print("==> training accuracy for epoch " .. epoch .. ':')
+	print(confusion.totalValid*100)
 
 	-- save/log current net
-	-- local filename = paths.concat(opt.save, 'model.net')
-	-- os.execute('mkdir -p ' .. sys.dirname(filename))
-	-- print('==> saving model to '..filename)
-	-- torch.save(filename, model)
+	local filename = paths.concat(opt.save, 'model.net')
+	os.execute('mkdir -p ' .. sys.dirname(filename))
+	print('==> saving model to '..filename)
+	torch.save(filename, model)
 
 	-- next epoch
 	confusion:zero()
 	epoch = epoch + 1
 
+end
+
+function test_model(model, data, labels, opt)
+
+    model:evaluate()
+
+    t_input = torch.zeros(opt.frame, opt.length):cuda()
+    t_labels = torch.zeros(1):cuda()
+    -- test over test data
+    for t = 1,data:size(1) do
+        t_input:zero()
+        t_labels:zero()
+        t_input[{}] = data[t]
+        t_labels[{}] = labels[t]
+        local pred = model:forward(t_input:transpose(1,2))
+        confusion:add(pred, t_labels[1])
+    end
+    -- print(confusion)
+    confusion:updateValids()
+
+    -- print accuracy
+    print("==> test accuracy for epoch " .. epoch .. ':')
+    -- print(confusion)
+    print(confusion.totalValid*100)
+    confusion:zero()
 end
 
 
@@ -218,9 +243,12 @@ function main()
     training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
     if opt.nTestDocs > 0 then
-	    local test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-	    local test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
-	end
+        test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+        test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    else
+        test_data = training_data:clone()
+        test_labels = training_labels:clone()
+    end
 
     -- build model *****************************************************************************
     model = nn.Sequential()
@@ -255,9 +283,11 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	print("Training model...")
 	for i=1,opt.nEpochs do
+        print("Training model...")
 		train_model(model, criterion, training_data, training_labels, opt)
+        print("\nTesting model...")
+        test_model(model,test_data,test_labels,opt)
 	end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)

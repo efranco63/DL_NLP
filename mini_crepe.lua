@@ -131,15 +131,15 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	confusion:updateValids()
 
 	-- print accuracy
-	-- print("==> training accuracy for epoch " .. epoch .. ':')
-	print(confusion)
-	-- print(confusion.totalValid*100)
+	print("==> training accuracy for epoch " .. epoch .. ':')
+	-- print(confusion)
+	print(confusion.totalValid*100)
 
 	-- save/log current net
-	-- local filename = paths.concat(opt.save, 'model.net')
-	-- os.execute('mkdir -p ' .. sys.dirname(filename))
-	-- print('==> saving model to '..filename)
-	-- torch.save(filename, model)
+	local filename = paths.concat(opt.save, 'model.net')
+	os.execute('mkdir -p ' .. sys.dirname(filename))
+	print('==> saving model to '..filename)
+	torch.save(filename, model)
 
 	-- next epoch
 	confusion:zero()
@@ -211,7 +211,13 @@ function test_model(model, data, labels, opt)
 		local pred = model:forward(t_input:transpose(1,2))
 		confusion:add(pred, t_labels[1])
 	end
-	print(confusion)
+	-- print(confusion)
+    confusion:updateValids()
+
+    -- print accuracy
+    print("==> test accuracy for epoch " .. epoch .. ':')
+    -- print(confusion)
+    print(confusion.totalValid*100)
 	confusion:zero()
     
     -- EVALUATING THE MODEL IN THE BELOW FASHION CAUSES MEMORY ERRORS FOR THE GPU
@@ -321,14 +327,15 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	print("Training model...")
 	-- train_model(model, criterion, training_data, training_labels, test_data, test_labels, opt)
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
-	-- for i=1,opt.nEpochs do
-	-- 	train_model(model, criterion, training_data, training_labels, opt)
- --        test_model
-	-- end
+	for i=1,opt.nEpochs do
+        print("Training model...")
+		train_model(model, criterion, training_data, training_labels, opt)
+        print("\nTesting model...")
+        test_model(model,test_data,test_labels,opt)
+	end
     
 end
 
