@@ -154,6 +154,12 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
 	model:cuda()
 	criterion:cuda()
 
+	-- classes
+	classes = {'1','2','3','4','5'}
+
+	-- This matrix records the current confusion across classes
+	confusion = optim.ConfusionMatrix(classes)
+
     parameters, grad_parameters = model:getParameters()
 
     minibatch = torch.zeros(opt.batchSize, opt.frame, opt.length):cuda()
