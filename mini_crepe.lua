@@ -331,9 +331,9 @@ function main()
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 	for i=1,opt.nEpochs do
-        print("Training model...")
+        print("\nTraining model...")
 		train_model(model, criterion, training_data, training_labels, opt)
-        print("\nTesting model...")
+        print("Testing model...")
         test_model(model,test_data,test_labels,opt)
 	end
     
