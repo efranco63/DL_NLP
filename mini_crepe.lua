@@ -222,7 +222,7 @@ function test_model(model, data, labels, opt)
 
     t_data[{}] = data
 
-    local pred = model:forward(t_data:transpose(2,3):contiguous()
+    local pred = model:forward(t_data:transpose(2,3):contiguous())
     local _, argmax = pred:max(2)
     local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
 
