@@ -251,7 +251,7 @@ function main()
     -- number of frames in the character vectors
     opt.frame = alphabet:len() 
     -- maximum character size of text document
-    opt.length = 1014
+    opt.length = 1014/2
     -- training/test sizes
     opt.nTrainDocs = 500
     opt.nTestDocs = 0
