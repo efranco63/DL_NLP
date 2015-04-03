@@ -213,20 +213,23 @@ function test_model(model, data, labels, opt)
 
     -- set model to evaluate mode (for modules that differ in training and testing, like Dropout)
     model:evaluate()
+
+    t_input = torch.zeros(opt.frame, opt.length):cuda()
+    t_labels = torch.zeros(1):cuda()
     -- test over test data
     print('==> testing on test set:')
-    for t = 1,test:size() do
-	    -- disp progress
-	    xlua.progress(t, test:size())
+    for t = 1,data:size(1) do
+    	t_input:zero()
+    	t_labels:zero()
 	    -- get new sample
-	    local input = test.data[t]
-	    input = input:cuda()
-	    local target = test.labels[t]
+	    local t_input[{}] = data[{ {t},{},{} }]
+	    local t_labels[{}] = labels[{ {t} }]
 	    -- test sample
-	    local pred = model:forward(input)
-	    -- print("\n" .. target .. "\n")
-	    confusion:add(pred, target)
-	end	 
+	    local pred = model:forward(t_input:transpose(1,2):contiguous())
+	    confusion:add(pred, t_labels[1])
+	end
+	print(confusion)
+	confusion:zero()
 end
 
 
