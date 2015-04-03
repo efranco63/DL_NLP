@@ -216,7 +216,7 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 5000
+    opt.nTrainDocs = 20000
     opt.nTestDocs = 1000
     opt.nClasses = 5
 
