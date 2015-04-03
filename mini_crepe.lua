@@ -152,7 +152,7 @@ function train_model(model, criterion, data, labels, test_data, test_labels, opt
 
     parameters, grad_parameters = model:getParameters()
 
-    minibatch = torch.zeros(opt.minibatchSize, opt.frame, opt.length):cuda()
+    minibatch = torch.zeros(opt.batchSize, opt.frame, opt.length):cuda()
     minibatch_labels = torch.zeros(opt.batchSize):cuda()
     
     -- optimization functional to train the model with torch's optim library
