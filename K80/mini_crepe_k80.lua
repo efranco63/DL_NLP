@@ -93,30 +93,18 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		
 			-- create closure to evaluate f(X) and df/dX
-			local feval = function(x)
-				-- get new parameters
-				if x ~= parameters then
-					parameters:copy(x)
-				end
-				-- reset gradients
-				gradParameters:zero()
-				-- f is the average of all criterions
-				local f = 0
-				-- evaluate function for complete mini batch
-				-- estimate f
-				local output = model:forward(inputs:transpose(2,3))
-				local err = criterion:forward(output, targets)
-				f = f + err
-				-- estimate df/dW
-				local df_do = criterion:backward(output, targets)
-				model:backward(inputs:transpose(2,3), df_do)
-				-- update confusion
-				for k=1,opt.batchSize do
-					confusion:add(output[k], targets[k])
-				end
-				-- return f and df/dX
-				return f,gradParameters
-			end
+			local function feval(x) 
+                
+                local f = criterion:forward(model:forward(inputs:transpose(2,3)), targets)
+                model:zeroGradParameters()
+                model:backward(inputs:transpose(2,3), criterion:backward(model.output, targets))
+
+                for k=1,opt.batchSize do
+                    confusion:add(model.output[k], targets[k])
+                end
+                
+                return f, gradParameters
+            end
 
 			-- optimize on current mini-batch
 			optimMethod(feval, parameters, optimState)
@@ -136,10 +124,10 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print(confusion.totalValid*100)
 
 	-- save/log current net
-	local filename = paths.concat(opt.save, 'model.net')
-	os.execute('mkdir -p ' .. sys.dirname(filename))
-	print('==> saving model to '..filename)
-	torch.save(filename, model)
+	-- local filename = paths.concat(opt.save, 'model.net')
+	-- os.execute('mkdir -p ' .. sys.dirname(filename))
+	-- print('==> saving model to '..filename)
+	-- torch.save(filename, model)
 
 	-- next epoch
 	confusion:zero()
@@ -259,15 +247,15 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 5
-    opt.nTestDocs = 0
+    opt.nTrainDocs = 15000
+    opt.nTestDocs = 5000
     opt.nClasses = 5
 
     -- training parameters
     opt.nEpochs = 40
     opt.batchSize = 1
     opt.nBatches = math.floor(opt.nTrainDocs / opt.batchSize)
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
@@ -301,10 +289,10 @@ function main()
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
-    -- -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
-    -- model:add(nn.TemporalConvolution(256, 256, 7))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.TemporalMaxPooling(3,3))
+    -- second layer (336x256) 336 = (1014 - 7 / 1 + 1) / 3
+    model:add(nn.TemporalConvolution(256, 256, 7))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(3,3))
 
     -- -- third layer (110x256) 110 = (336 - 7 / 1 + 1) / 3
     -- model:add(nn.TemporalConvolution(256, 256, 3))
@@ -312,8 +300,8 @@ function main()
     -- model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (36x256) 110 = (110 - 3 / 1 + 1) / 3
-    model:add(nn.Reshape(336*256))
-    model:add(nn.Linear(336*256,1024))
+    model:add(nn.Reshape(110*256))
+    model:add(nn.Linear(110*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
