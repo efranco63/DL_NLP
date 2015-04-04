@@ -67,6 +67,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
     	weightDecay = opt.weightDecay,
     	momentum = opt.momentum,
     	learningRateDecay = opt.learningRateDecay
+        evalCounter = opt.evalCounter
     }
     optimMethod = optim.sgd
 
@@ -118,8 +119,27 @@ function train_model(model, criterion, training_data, training_labels, opt)
 				return f,gradParameters
 			end
 
-			-- optimize on current mini-batch
-			optimMethod(feval, parameters, optimState)
+            -- optimize on current mini-batch
+			-- evaluate fx, df/dx
+            fx, dfdx = feval(parameters)
+            -- weight decay
+            if optimState.weightDecay ~= 0 then
+                dfdx:add(optimState.weightDecay, parameters)
+            -- apply momentum
+            if optimState.momentum ~= 0 then
+                if not optimState.dfdx then
+                    optimState.dfdx = torch.Tensor():typeAs(dfdx):resizeAs(dfdx):copy(dfdx)
+                else
+                    optimState.dfdx:mul(mom)
+                end
+                dfdx = optimState.dfdx
+            end
+            -- learning rate decay
+            local clr = optimState.learningRate / (1 + optimState.evalCounter*optimState.learningRateDecay)
+            -- parameter update with learning rate
+            parameters:add(-clr, dfdx)
+            -- update evaluation counter
+            optimState.evalCounter = optimState.evalCounter + 1
 		end
 	end
 
@@ -259,8 +279,8 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 10000
-    opt.nTestDocs = 1000
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 500
     opt.nClasses = 5
 
     -- training parameters
@@ -271,6 +291,7 @@ function main()
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
+    opt.evalCounter = 0
     
     print("Loading raw data...")
     raw_data = torch.load(opt.dataPath)
