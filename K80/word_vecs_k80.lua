@@ -121,30 +121,46 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		
 			-- create closure to evaluate f(X) and df/dX
-			local feval = function(x)
-				-- get new parameters
-				if x ~= parameters then
-					parameters:copy(x)
-				end
-				-- reset gradients
-				gradParameters:zero()
-				-- f is the average of all criterions
-				local f = 0
-				-- evaluate function for complete mini batch
-				-- estimate f
-				local output = model:forward(inputs)
-				local err = criterion:forward(output, targets)
-				f = f + err
-				-- estimate df/dW
-				local df_do = criterion:backward(output, targets)
-				model:backward(inputs, df_do)
-				-- update confusion
-				for k=1,opt.batchSize do
-					confusion:add(output[k], targets[k])
-				end
-				-- return f and df/dX
-				return f,gradParameters
-			end
+			-- local feval = function(x)
+			-- 	-- get new parameters
+			-- 	if x ~= parameters then
+			-- 		parameters:copy(x)
+			-- 	end
+			-- 	-- reset gradients
+			-- 	gradParameters:zero()
+			-- 	-- f is the average of all criterions
+			-- 	local f = 0
+			-- 	-- evaluate function for complete mini batch
+			-- 	-- estimate f
+			-- 	local output = model:forward(inputs)
+			-- 	local err = criterion:forward(output, targets)
+			-- 	f = f + err
+			-- 	-- estimate df/dW
+			-- 	local df_do = criterion:backward(output, targets)
+			-- 	model:backward(inputs, df_do)
+			-- 	-- update confusion
+			-- 	for k=1,opt.batchSize do
+			-- 		confusion:add(output[k], targets[k])
+			-- 	end
+			-- 	-- return f and df/dX
+			-- 	return f,gradParameters
+			-- end
+
+            local function feval(x) 
+                inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
+                targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
+                
+                model:training()
+                local f = criterion:forward(model:forward(inputs), targets)
+                model:zeroGradParameters()
+                model:backward(minibatch, criterion:backward(model.output, targets))
+
+                for k=1,opt.batchSize do
+                    confusion:add(output[k], targets[k])
+                end
+                
+                return f, gradParameters
+            end
 
 			-- optimize on current mini-batch
 			optimMethod(feval, parameters, optimState)
@@ -157,18 +173,18 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
 	-- print confusion matrix
-	-- print(confusion)
-	confusion:updateValids()
+	print(confusion)
+	-- confusion:updateValids()
 
 	-- print accuracy
-	print("==> training accuracy for epoch " .. epoch .. ':')
-	print(confusion.totalValid*100)
+	-- print("==> training accuracy for epoch " .. epoch .. ':')
+	-- print(confusion.totalValid*100)
 
 	-- save/log current net
-	local filename = paths.concat(opt.save, 'model.net')
-	os.execute('mkdir -p ' .. sys.dirname(filename))
-	print('==> saving model to '..filename)
-	torch.save(filename, model)
+	-- local filename = paths.concat(opt.save, 'model.net')
+	-- os.execute('mkdir -p ' .. sys.dirname(filename))
+	-- print('==> saving model to '..filename)
+	-- torch.save(filename, model)
 
 	-- next epoch
 	confusion:zero()
@@ -191,13 +207,12 @@ function test_model(model, data, labels, opt)
         local pred = model:forward(t_input)
         confusion:add(pred, t_labels[1])
     end
-    -- print(confusion)
-    confusion:updateValids()
+    -- confusion:updateValids()
 
     -- print accuracy
-    print("==> test accuracy for epoch " .. epoch .. ':')
-    -- print(confusion)
-    print(confusion.totalValid*100)
+    -- print("==> test accuracy for epoch " .. epoch .. ':')
+    print(confusion)
+    -- print(confusion.totalValid*100)
     confusion:zero()
 end
 
@@ -207,7 +222,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 200
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/home/eduardo/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/home/eduardo/A3/data/train.t7b"
@@ -216,9 +231,9 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 15000
-    opt.nTestDocs = 1000
-    opt.nClasses = 5
+    opt.nTrainDocs = 1
+    opt.nTestDocs = 0
+    opt.nClasses = 1
 
     -- training parameters
     opt.nEpochs = 20
