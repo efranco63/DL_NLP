@@ -125,6 +125,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
             -- weight decay
             if optimState.weightDecay ~= 0 then
                 dfdx:add(optimState.weightDecay, parameters)
+            end
             -- apply momentum
             if optimState.momentum ~= 0 then
                 if not optimState.dfdx then
