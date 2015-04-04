@@ -131,7 +131,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
                 if not optimState.dfdx then
                     optimState.dfdx = torch.Tensor():typeAs(dfdx):resizeAs(dfdx):copy(dfdx)
                 else
-                    optimState.dfdx:mul(mom)
+                    optimState.dfdx:mul(optimState.momentum)
                 end
                 dfdx = optimState.dfdx
             end
