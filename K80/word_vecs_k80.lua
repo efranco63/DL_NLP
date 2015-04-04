@@ -170,12 +170,12 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
 	-- print confusion matrix
-	print(confusion)
-	-- confusion:updateValids()
+	-- print(confusion)
+	confusion:updateValids()
 
-	-- print accuracy
-	-- print("==> training accuracy for epoch " .. epoch .. ':')
-	-- print(confusion.totalValid*100)
+	print accuracy
+	print("==> training accuracy for epoch " .. epoch .. ':')
+	print(confusion.totalValid*100)
 
 	-- save/log current net
 	-- local filename = paths.concat(opt.save, 'model.net')
@@ -204,12 +204,12 @@ function test_model(model, data, labels, opt)
         local pred = model:forward(t_input)
         confusion:add(pred, t_labels[1])
     end
-    -- confusion:updateValids()
+    confusion:updateValids()
 
     -- print accuracy
-    -- print("==> test accuracy for epoch " .. epoch .. ':')
-    print(confusion)
-    -- print(confusion.totalValid*100)
+    print("==> test accuracy for epoch " .. epoch .. ':')
+    -- print(confusion)
+    print(confusion.totalValid*100)
     confusion:zero()
 end
 
@@ -219,7 +219,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 200
+    opt.inputDim = 300
     -- paths to glovee vectors and raw data
     opt.glovePath = "/home/eduardo/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/home/eduardo/A3/data/train.t7b"
@@ -228,8 +228,8 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 1000
-    opt.nTestDocs = 500
+    opt.nTrainDocs = 10000
+    opt.nTestDocs = 5000
     opt.nClasses = 5
 
     -- training parameters
@@ -265,7 +265,7 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#alphabet x 100)
-    model:add(nn.TemporalConvolution(opt.inputDim, 256, 5))
+    model:add(nn.TemporalConvolution(opt.inputDim, 256, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
@@ -275,8 +275,8 @@ function main()
     -- model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (22x256) 22 = (48 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(48*256))
-    model:add(nn.Linear(48*256,1024))
+    model:add(nn.Reshape(47*256))
+    model:add(nn.Linear(47*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
