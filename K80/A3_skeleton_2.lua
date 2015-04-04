@@ -30,9 +30,9 @@
 -- of weight ijk for the given input.
 ------------------------------------------------------------------------
 
-local TemporalLogExPooling, parent = torch.class('nn.TemporalLogExPooling', 'nn.Module')
+local TemporalLogExpPooling, parent = torch.class('nn.TemporalLogExpPooling', 'nn.Module')
 
-function TemporalLogExPooling:__init(kW, dW, beta)
+function TemporalLogExpPooling:__init(kW, dW, beta)
    parent.__init(self)
 
    self.kW = kW
@@ -42,7 +42,7 @@ function TemporalLogExPooling:__init(kW, dW, beta)
    self.indices = torch.Tensor()
 end
 
-function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO TemporalLogExpPooling
+function TemporalLogExpPooling:updateOutput(input) -- MODIFY THE NAME BACK TO TemporalLogExpPooling
    -----------------------------------------------
    
    -- if the input tensor is 2D (nInputFrame x inputFrameSize)
@@ -110,7 +110,7 @@ function TemporalLogExPooling:updateOutput(input) -- MODIFY THE NAME BACK TO Tem
    return self.output
 end
 
-function TemporalLogExPooling:updateGradInput(input, gradOutput)
+function TemporalLogExpPooling:updateGradInput(input, gradOutput)
 
    -----------------------------------------------
    if input:dim() ==  2 then --2D
@@ -167,7 +167,7 @@ function TemporalLogExPooling:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function TemporalLogExPooling:empty()
+function TemporalLogExpPooling:empty()
    self.gradInput:resize()
    self.gradInput:storage():resize(0)
    self.output:resize()
