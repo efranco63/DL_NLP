@@ -208,7 +208,7 @@ function main()
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 40
+    opt.nEpochs = 50
     opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
@@ -245,13 +245,13 @@ function main()
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (48x256) 48 = (100 - 5 / 1 + 1) / 2
-    -- model:add(nn.TemporalConvolution(256, 256, 5))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.TemporalMaxPooling(2,2))
+    model:add(nn.TemporalConvolution(256, 256, 5))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (22x256) 22 = (48 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(47*256))
-    model:add(nn.Linear(47*256,1024))
+    model:add(nn.Reshape(21*256))
+    model:add(nn.Linear(21*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
