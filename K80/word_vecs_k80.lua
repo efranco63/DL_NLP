@@ -103,7 +103,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
+	-- create tensors that live on the GPU and will copy data over from CPU to avoid memory leaks
+    inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -116,35 +117,9 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 		-- create mini batch
 		if t + opt.batchSize-1 <= training_data:size(1) then
-			-- xx = opt.batchSize
+			-- copy data over from CPU to GPU
 			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
-		
-			-- create closure to evaluate f(X) and df/dX
-			-- local feval = function(x)
-			-- 	-- get new parameters
-			-- 	if x ~= parameters then
-			-- 		parameters:copy(x)
-			-- 	end
-			-- 	-- reset gradients
-			-- 	gradParameters:zero()
-			-- 	-- f is the average of all criterions
-			-- 	local f = 0
-			-- 	-- evaluate function for complete mini batch
-			-- 	-- estimate f
-			-- 	local output = model:forward(inputs)
-			-- 	local err = criterion:forward(output, targets)
-			-- 	f = f + err
-			-- 	-- estimate df/dW
-			-- 	local df_do = criterion:backward(output, targets)
-			-- 	model:backward(inputs, df_do)
-			-- 	-- update confusion
-			-- 	for k=1,opt.batchSize do
-			-- 		confusion:add(output[k], targets[k])
-			-- 	end
-			-- 	-- return f and df/dX
-			-- 	return f,gradParameters
-			-- end
 
             local function feval(x) 
                 
@@ -238,7 +213,7 @@ function main()
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
-    opt.weightDecay = 0
+    opt.weightDecay = 0.5
 
     print("Loading word vectors...")
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
