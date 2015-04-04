@@ -189,7 +189,7 @@ function main()
     opt.nEpochs = 40
     opt.batchSize = 128
     opt.nBatches = math.floor(opt.nTrainDocs / opt.batchSize)
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
