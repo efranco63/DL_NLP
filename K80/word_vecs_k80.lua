@@ -213,7 +213,7 @@ function main()
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
-    opt.weightDecay = 0.2
+    opt.weightDecay = 0.01
 
     print("Loading word vectors...")
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
