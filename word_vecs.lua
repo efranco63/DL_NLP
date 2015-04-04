@@ -228,7 +228,7 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 15000
+    opt.nTrainDocs = 5000
     opt.nTestDocs = 1000
     opt.nClasses = 5
 
@@ -265,18 +265,18 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#alphabet x 100)
-    model:add(nn.TemporalConvolution(opt.inputDim, 256, 11))
+    model:add(nn.TemporalConvolution(opt.inputDim, 256, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (48x256) 48 = (100 - 5 / 1 + 1) / 2
-    -- model:add(nn.TemporalConvolution(256, 256, 5))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.TemporalMaxPooling(2,2))
+    -- second layer (47x256) 47 = (100 - 7 / 1 + 1) / 2
+    model:add(nn.TemporalConvolution(256, 256, 5))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(2,2))
 
-    -- 1st fully connected layer (22x256) 22 = (48 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(45*256))
-    model:add(nn.Linear(45*256,1024))
+    -- 1st fully connected layer (20x256) 20 = (47 - 5 / 1 + 1) / 2
+    model:add(nn.Reshape(20*256))
+    model:add(nn.Linear(20*256,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
