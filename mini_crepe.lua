@@ -313,9 +313,9 @@ function main()
     model:add(nn.Dropout(0.5))
 
     -- 2nd fully connected layer (1024)
-    -- model:add(nn.Linear(1024,1024))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.Dropout(0.5))
+    model:add(nn.Linear(1024,1024))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
