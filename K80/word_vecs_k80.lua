@@ -194,7 +194,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 50
+    opt.inputDim = 300
     -- paths to glovee vectors and raw data
     opt.glovePath = "/home/eduardo/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/home/eduardo/A3/data/train.t7b"
@@ -203,17 +203,17 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 1000
-    opt.nTestDocs = 500
+    opt.nTrainDocs = 20000
+    opt.nTestDocs = 6000
     opt.nClasses = 5
 
     -- training parameters
     opt.nEpochs = 40
     opt.batchSize = 128
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
-    opt.weightDecay = 0.01
+    opt.weightDecay = 0
 
     print("Loading word vectors...")
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
