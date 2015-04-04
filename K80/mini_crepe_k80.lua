@@ -247,7 +247,7 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 10000
+    opt.nTrainDocs = 8000
     opt.nTestDocs = 3000
     opt.nClasses = 5
 
