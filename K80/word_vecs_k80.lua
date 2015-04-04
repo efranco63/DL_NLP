@@ -298,11 +298,11 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	print("\nTraining model...")
-    for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-        test_model(model,test_data,test_labels,opt)
-	end
+	-- print("\nTraining model...")
+ --    for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+ --        test_model(model,test_data,test_labels,opt)
+	-- end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
