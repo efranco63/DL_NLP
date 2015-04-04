@@ -173,7 +173,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	-- print(confusion)
 	confusion:updateValids()
 
-	print accuracy
+	-- print accuracy
 	print("==> training accuracy for epoch " .. epoch .. ':')
 	print(confusion.totalValid*100)
 
