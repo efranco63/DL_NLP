@@ -66,8 +66,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
     	learningRate = opt.learningRate,
     	weightDecay = opt.weightDecay,
     	momentum = opt.momentum,
-    	learningRateDecay = opt.learningRateDecay
-        evalCounter = opt.evalCounter
+    	learningRateDecay = opt.learningRateDecay,
+        evalCounter = opt.evalCounter,
     }
     optimMethod = optim.sgd
 
