@@ -50,7 +50,7 @@ function preprocess_data(raw_data, opt, dictionary)
     return data, labels
 end
 
-
+-- manually write out optimization process
 function train_model(model, criterion, training_data, training_labels, opt)
 
 	-- classes

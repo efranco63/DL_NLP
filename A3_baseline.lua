@@ -136,7 +136,7 @@ function main()
     -- here we take the first nTrainDocs documents from each class as training samples
     -- and use the rest as a validation set.
     opt.nTrainDocs = 20000
-    opt.nTestDocs = 0
+    opt.nTestDocs = 5000
     opt.nClasses = 5
     -- SGD parameters - play around with these
     opt.nEpochs = 60
@@ -156,19 +156,32 @@ function main()
     print("Computing document input representations...")
     local processed_data, labels = preprocess_data(raw_data, glove_table, opt)
     
-    -- split data into makeshift training and validation sets
-    local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
-    local training_labels = labels:sub(1, opt.nClasses*opt.nTrainDocs):clone()
+    -- -- split data into makeshift training and validation sets
+    -- local training_data = processed_data:sub(1, opt.nClasses*opt.nTrainDocs, 1, processed_data:size(2)):clone()
+    -- local training_labels = labels:sub(1, opt.nClasses*opt.nTrainDocs):clone()
     
-    -- make your own choices - here I have not created a separate test set
-    local test_data = training_data:clone() 
-    local test_labels = training_labels:clone()
+    -- -- make your own choices - here I have not created a separate test set
+    -- local test_data = training_data:clone() 
+    -- local test_labels = training_labels:clone()
+
+    print("Splitting data into training and validation sets...")
+    -- split data into makeshift training and validation sets
+    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+
+    if opt.nTestDocs > 0 then
+        test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+        test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    else
+        test_data = training_data:clone()
+        test_labels = training_labels:clone()
+    end
 
     -- construct model:
     model = nn.Sequential()
    
     -- if you decide to just adapt the baseline code for part 2, you'll probably want to make this linear and remove pooling
-    model:add(nn.TemporalConvolution(1, 40, 10, 1))
+    model:add(nn.TemporalConvolution(1, 20, 10, 1))
     
     --------------------------------------------------------------------------------------
     -- Replace this temporal max-pooling module with your log-exponential pooling module:
@@ -178,8 +191,8 @@ function main()
     -- model:add(nn.TemporalLogExpPooling(3, 1, beta))
     
     -- 20*39
-    model:add(nn.Reshape(40*189, true))
-    model:add(nn.Linear(40*189, 5))
+    model:add(nn.Reshape(20*189, true))
+    model:add(nn.Linear(20*189, 5))
     model:add(nn.LogSoftMax())
 
     criterion = nn.ClassNLLCriterion()
