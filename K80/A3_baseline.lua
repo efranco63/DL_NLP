@@ -136,7 +136,7 @@ function main()
     -- here we take the first nTrainDocs documents from each class as training samples
     -- and use the rest as a validation set.
     opt.nTrainDocs = 10000
-    opt.nTestDocs = 0
+    opt.nTestDocs = 1000
     opt.nClasses = 5
     -- SGD parameters - play around with these
     opt.nEpochs = 30
