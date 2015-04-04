@@ -219,7 +219,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 50
+    opt.inputDim = 200
     -- paths to glovee vectors and raw data
     opt.glovePath = "/home/eduardo/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/home/eduardo/A3/data/train.t7b"
@@ -228,13 +228,13 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 1
-    opt.nTestDocs = 0
-    opt.nClasses = 1
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 500
+    opt.nClasses = 5
 
     -- training parameters
     opt.nEpochs = 5
-    opt.batchSize = 1
+    opt.batchSize = 128
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
