@@ -121,30 +121,18 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		
 			-- create closure to evaluate f(X) and df/dX
-			local feval = function(x)
-				-- get new parameters
-				if x ~= parameters then
-					parameters:copy(x)
-				end
-				-- reset gradients
-				gradParameters:zero()
-				-- f is the average of all criterions
-				local f = 0
-				-- evaluate function for complete mini batch
-				-- estimate f
-				local output = model:forward(inputs)
-				local err = criterion:forward(output, targets)
-				f = f + err
-				-- estimate df/dW
-				local df_do = criterion:backward(output, targets)
-				model:backward(inputs, df_do)
-				-- update confusion
-				for k=1,opt.batchSize do
-					confusion:add(output[k], targets[k])
-				end
-				-- return f and df/dX
-				return f,gradParameters
-			end
+			local function feval(x) 
+                
+                local f = criterion:forward(model:forward(inputs), targets)
+                model:zeroGradParameters()
+                model:backward(inputs, criterion:backward(model.output, targets))
+
+                for k=1,opt.batchSize do
+                    confusion:add(model.output[k], targets[k])
+                end
+                
+                return f, gradParameters
+            end
 
 			-- optimize on current mini-batch
 			optimMethod(feval, parameters, optimState)
@@ -228,14 +216,14 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 5000
-    opt.nTestDocs = 1000
+    opt.nTrainDocs = 20000
+    opt.nTestDocs = 6000
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 20
+    opt.nEpochs = 50
     opt.batchSize = 128
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0

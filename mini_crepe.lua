@@ -93,30 +93,18 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
 		
 			-- create closure to evaluate f(X) and df/dX
-			local feval = function(x)
-				-- get new parameters
-				if x ~= parameters then
-					parameters:copy(x)
-				end
-				-- reset gradients
-				gradParameters:zero()
-				-- f is the average of all criterions
-				local f = 0
-				-- evaluate function for complete mini batch
-				-- estimate f
-				local output = model:forward(inputs:transpose(2,3))
-				local err = criterion:forward(output, targets)
-				f = f + err
-				-- estimate df/dW
-				local df_do = criterion:backward(output, targets)
-				model:backward(inputs:transpose(2,3), df_do)
-				-- update confusion
-				for k=1,opt.batchSize do
-					confusion:add(output[k], targets[k])
-				end
-				-- return f and df/dX
-				return f,gradParameters
-			end
+			local function feval(x) 
+                
+                local f = criterion:forward(model:forward(inputs:transpose(2,3)), targets)
+                model:zeroGradParameters()
+                model:backward(inputs:transpose(2,3), criterion:backward(model.output, targets))
+
+                for k=1,opt.batchSize do
+                    confusion:add(model.output[k], targets[k])
+                end
+                
+                return f, gradParameters
+            end
 
 			-- optimize on current mini-batch
 			optimMethod(feval, parameters, optimState)
@@ -147,54 +135,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 end
 
--- training function as it appears in the baseline code
--- function train_model(model, criterion, data, labels, test_data, test_labels, opt)
-
--- 	-- classes
--- 	classes = {'1','2','3','4','5'}
-
--- 	-- This matrix records the current confusion across classes
--- 	confusion = optim.ConfusionMatrix(classes)
-
---     parameters, grad_parameters = model:getParameters()
-
---     minibatch = torch.zeros(opt.batchSize, opt.frame, opt.length):cuda()
---     minibatch_labels = torch.zeros(opt.batchSize):cuda()
-    
---     -- optimization functional to train the model with torch's optim library
---     local function feval(x) 
-        
---         minibatch:zero()
---         minibatch_labels:zero()
---         minibatch[{}] = data[{ {opt.idx,opt.idx+opt.batchSize-1},{},{} }]
---         minibatch_labels[{}] = labels[{ {opt.idx,opt.idx+opt.batchSize-1} }]
-        
---         model:training()
---         local minibatch_loss = criterion:forward(model:forward(minibatch:transpose(2,3):contiguous()), minibatch_labels)
---         model:zeroGradParameters()
---         model:backward(minibatch:transpose(2,3):contiguous(), criterion:backward(model.output, minibatch_labels))
-        
---         return minibatch_loss, grad_parameters
---     end
-    
---     for epoch=1,opt.nEpochs do
---         local order = torch.randperm(opt.nBatches) -- not really good randomization
---         for batch=1,opt.nBatches do
---             opt.idx = (order[batch] - 1) * opt.batchSize + 1
---             optim.sgd(feval, parameters, opt)
---             -- print("epoch: ", epoch, " batch: ", batch)
---         end
-
---         -- print("==> training accuracy for epoch " .. epoch .. "")
---         -- test_model(model, training_data, training_labels, opt)
---         print("==> testing on test set for epoch " .. epoch .. "")
---         test_model(model, test_data, test_labels, opt)
---         -- local accuracy = test_model(model, test_data, test_labels, opt)
---         -- print("epoch ", epoch, " error: ", accuracy)
-
---     end
--- end
-
 function test_model(model, data, labels, opt)
 
 	model:evaluate()
@@ -218,24 +158,6 @@ function test_model(model, data, labels, opt)
     -- print(confusion)
     print(confusion.totalValid*100)
 	confusion:zero()
-    
-    -- EVALUATING THE MODEL IN THE BELOW FASHION CAUSES MEMORY ERRORS FOR THE GPU
-    -- model:evaluate()
-
-    -- t_data = torch.zeros(data:size()):cuda()
-    -- t_labels = torch.zeros(labels:size()):cuda()
-
-    -- t_data[{}] = data
-    -- t_labels[{}] = labels
-
-    -- local pred = model:forward(t_data:transpose(2,3):contiguous())
-    -- local _, argmax = pred:max(2)
-    -- local err = torch.ne(argmax:double(), labels:double()):sum() / labels:size(1)
-
-    -- --local debugger = require('fb.debugger')
-    -- --debugger.enter()
-
-    -- return err
 end
 
 
@@ -259,8 +181,8 @@ function main()
     -- maximum character size of text document
     opt.length = 1014
     -- training/test sizes
-    opt.nTrainDocs = 1000
-    opt.nTestDocs = 500
+    opt.nTrainDocs = 20000
+    opt.nTestDocs = 6000
     opt.nClasses = 5
 
     -- training parameters
