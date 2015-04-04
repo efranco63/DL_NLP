@@ -132,8 +132,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	-- print accuracy
 	print("==> training accuracy for epoch " .. epoch .. ':')
-	print(confusion)
-	-- print(confusion.totalValid*100)
+	-- print(confusion)
+	print(confusion.totalValid*100)
 
 	-- save/log current net
 	local filename = paths.concat(opt.save, 'model.net')
@@ -215,8 +215,8 @@ function test_model(model, data, labels, opt)
 
     -- print accuracy
     -- print("==> test accuracy for epoch " .. epoch .. ':')
-    print(confusion)
-    -- print(confusion.totalValid*100)
+    -- print(confusion)
+    print(confusion.totalValid*100)
 	confusion:zero()
     
     -- EVALUATING THE MODEL IN THE BELOW FASHION CAUSES MEMORY ERRORS FOR THE GPU
