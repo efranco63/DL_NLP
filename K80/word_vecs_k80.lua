@@ -182,7 +182,7 @@ function test_model(model, data, labels, opt)
     confusion:updateValids()
 
     -- print accuracy
-    print("==> test accuracy for epoch " .. epoch .. ':')
+    print("==> test accuracy")
     -- print(confusion)
     print(confusion.totalValid*100)
     confusion:zero()
@@ -194,7 +194,7 @@ function main()
     -- Configuration parameters
     opt = {}
     -- word vector dimensionality
-    opt.inputDim = 300
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/home/eduardo/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/home/eduardo/A3/data/train.t7b"
@@ -203,8 +203,8 @@ function main()
     -- maximum number of words per text document
     opt.length = 100
     -- training/test sizes
-    opt.nTrainDocs = 10000
-    opt.nTestDocs = 5000
+    opt.nTrainDocs = 1000
+    opt.nTestDocs = 500
     opt.nClasses = 5
 
     -- training parameters
@@ -213,7 +213,7 @@ function main()
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
-    opt.weightDecay = 0.5
+    opt.weightDecay = 0.2
 
     print("Loading word vectors...")
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
