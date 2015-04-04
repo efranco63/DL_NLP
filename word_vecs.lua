@@ -89,6 +89,9 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
     parameters,gradParameters = model:getParameters()
 
+    -- table acting as a log of accuracies per epoch
+    accs = {}
+
     -- configure optimizer
     optimState = {
     	learningRate = opt.learningRate,
@@ -162,7 +165,17 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	-- print accuracy
 	print("==> training accuracy for epoch " .. epoch .. ':')
-	print(confusion.totalValid*100)
+	accuracy = confusion.totalValid*100
+    -- log accuracy for this epoch
+    accs[epoch] = accuracy
+    print(accuracy)
+
+    -- if the accuracy for this epoch is less than the previous epoch, decrease learning rate by half
+    if epoch > 1 then
+        if accuracy <= accs[epoch-1] then
+            opt.learningRate = opt.learningRate / 2
+        end
+    end
 
 	-- save/log current net
 	local filename = paths.concat(opt.save, 'model.net')
