@@ -147,16 +147,13 @@ function train_model(model, criterion, training_data, training_labels, opt)
 			-- end
 
             local function feval(x) 
-                inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
-                targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
                 
-                model:training()
                 local f = criterion:forward(model:forward(inputs), targets)
                 model:zeroGradParameters()
-                model:backward(minibatch, criterion:backward(model.output, targets))
+                model:backward(inputs, criterion:backward(model.output, targets))
 
                 for k=1,opt.batchSize do
-                    confusion:add(output[k], targets[k])
+                    confusion:add(model.output[k], targets[k])
                 end
                 
                 return f, gradParameters
@@ -236,7 +233,7 @@ function main()
     opt.nClasses = 1
 
     -- training parameters
-    opt.nEpochs = 20
+    opt.nEpochs = 5
     opt.batchSize = 1
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
@@ -298,11 +295,11 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	-- print("\nTraining model...")
- --    for i=1,opt.nEpochs do
-	-- 	train_model(model, criterion, training_data, training_labels, opt)
- --        test_model(model,test_data,test_labels,opt)
-	-- end
+	print("\nTraining model...")
+    for i=1,opt.nEpochs do
+		train_model(model, criterion, training_data, training_labels, opt)
+        test_model(model,test_data,test_labels,opt)
+	end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
