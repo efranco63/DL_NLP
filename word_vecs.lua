@@ -89,9 +89,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
     parameters,gradParameters = model:getParameters()
 
-    -- table acting as a log of accuracies per epoch
-    accs = {}
-
     -- configure optimizer
     optimState = {
     	learningRate = opt.learningRate,
@@ -219,6 +216,8 @@ function main()
 
     -- Configuration parameters
     opt = {}
+    -- table acting as a log of accuracies per epoch
+    accs = {}
     -- word vector dimensionality
     opt.inputDim = 300
     -- paths to glovee vectors and raw data
