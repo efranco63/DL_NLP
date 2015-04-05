@@ -253,18 +253,23 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#alphabet x 100)
-    model:add(nn.TemporalConvolution(opt.inputDim, 256, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (47x256) 47 = (100 - 7 / 1 + 1) / 2
-    model:add(nn.TemporalConvolution(256, 256, 5))
+    model:add(nn.TemporalConvolution(512, 512, 5))
+    model:add(nn.Threshold())
+    model:add(nn.TemporalMaxPooling(2,2))
+
+    -- second layer (47x256) 47 = (100 - 7 / 1 + 1) / 2
+    model:add(nn.TemporalConvolution(512, 512, 5))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (20x256) 20 = (47 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(21*256))
-    model:add(nn.Linear(21*256,1024))
+    model:add(nn.Reshape(8*512))
+    model:add(nn.Linear(8*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
