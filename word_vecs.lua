@@ -152,7 +152,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	print("==> training accuracy for epoch " .. epoch .. ':')
 	accuracy = confusion.totalValid*100
     -- log accuracy for this epoch
-    accs[epoch] = accuracy
     print(accuracy)
 
     -- if the accuracy for this epoch is less than the previous epoch, decrease learning rate by half
@@ -205,6 +204,7 @@ function test_model(model, data, labels, opt)
     -- end
 
     accs['max'] = math.max(accuracy,accs['max'])
+    accs[epoch] = accuracy
 
     confusion:zero()
 end
