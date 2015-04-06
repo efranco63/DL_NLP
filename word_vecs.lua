@@ -182,7 +182,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
+    t_input = torch.zeros(opt.length+2, opt.inputDim+2):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -212,7 +212,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 300
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
@@ -258,12 +258,12 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     model:add(nn.SpatialZeroPadding(2, 2, 2, 2))
-    -- first layer (#inputDim x 202)
-    model:add(nn.TemporalConvolution(opt.inputDim+2, 512, 7))
+    -- first layer (#inputDim x 204)
+    model:add(nn.TemporalConvolution(opt.inputDim+4, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (98x512) 
+    -- second layer (99x512) 
     model:add(nn.TemporalConvolution(512, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
