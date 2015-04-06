@@ -221,8 +221,8 @@ function main()
     -- maximum number of words per text document
     opt.length = 200
     -- training/test sizes
-    opt.nTrainDocs = 24000
-    opt.nTestDocs = 2000
+    opt.nTrainDocs = 100
+    opt.nTestDocs = 100
     opt.nClasses = 5
 
     -- training parameters
@@ -259,7 +259,7 @@ function main()
     model = nn.Sequential()
     model:add(nn.SpatialZeroPadding(2, 2, 2, 2))
     -- first layer (#inputDim x 202)
-    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim+2, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
