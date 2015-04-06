@@ -182,7 +182,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
+    t_input = torch.zeros(1,opt.length, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
