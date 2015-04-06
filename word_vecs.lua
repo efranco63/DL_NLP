@@ -156,17 +156,21 @@ function train_model(model, criterion, training_data, training_labels, opt)
     print(accuracy)
 
     -- if the accuracy for this epoch is less than the previous epoch, decrease learning rate by half
-    if epoch > 1 then
-        if accuracy <= accs[epoch-1] then
-            opt.learningRate = opt.learningRate / 2
-        end
-    end
+    -- if epoch > 1 then
+    --     if accuracy <= accs[epoch-1] then
+    --         opt.learningRate = opt.learningRate / 2
+    --     end
+    -- end
 
 	-- save/log current net
-	local filename = paths.concat(opt.save, 'model.net')
-	os.execute('mkdir -p ' .. sys.dirname(filename))
-	print('==> saving model to '..filename)
-	torch.save(filename, model)
+	if accuracy > accs['max'] then 
+        local filename = paths.concat(opt.save, 'model.net')
+    	os.execute('mkdir -p ' .. sys.dirname(filename))
+    	print('==> saving model to '..filename)
+    	torch.save(filename, model)
+    end
+
+    accs['max'] = math.max(accuracy,accs['max'])
 
 	-- next epoch
 	confusion:zero()
@@ -206,6 +210,7 @@ function main()
     opt = {}
     -- table acting as a log of accuracies per epoch
     accs = {}
+    accs['max'] = 0
     -- word vector dimensionality
     opt.inputDim = 300
     -- paths to glovee vectors and raw data
@@ -214,14 +219,14 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 100
+    opt.length = 200
     -- training/test sizes
-    opt.nTrainDocs = 20000
-    opt.nTestDocs = 6000
+    opt.nTrainDocs = 24000
+    opt.nTestDocs = 2000
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 50
+    opt.nEpochs = 100
     opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
@@ -252,24 +257,33 @@ function main()
 
     -- build model *****************************************************************************
     model = nn.Sequential()
-    -- first layer (#alphabet x 100)
+    model:add(nn.SpatialZeroPadding(2, 2, 2, 2))
+    -- first layer (#inputDim x 202)
     model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (47x256) 47 = (100 - 7 / 1 + 1) / 2
-    model:add(nn.TemporalConvolution(512, 512, 5))
+    -- second layer (98x512) 
+    model:add(nn.TemporalConvolution(512, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (47x256) 47 = (100 - 7 / 1 + 1) / 2
+    -- third layer (46x512) 
     model:add(nn.TemporalConvolution(512, 512, 5))
+    model:add(nn.Threshold())
+
+    -- fourth layer (42x512) 
+    model:add(nn.TemporalConvolution(512, 512, 3))
+    model:add(nn.Threshold())
+
+    -- fourth layer (40x512) 
+    model:add(nn.TemporalConvolution(512, 512, 3))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- 1st fully connected layer (20x256) 20 = (47 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(8*512))
-    model:add(nn.Linear(8*512,1024))
+    -- 1st fully connected layer (19x512)
+    model:add(nn.Reshape(19*512))
+    model:add(nn.Linear(19*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
