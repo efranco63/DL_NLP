@@ -182,7 +182,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(1,opt.length, opt.inputDim):cuda()
+    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -212,7 +212,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 50
+    opt.inputDim = 300
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
@@ -221,8 +221,8 @@ function main()
     -- maximum number of words per text document
     opt.length = 200
     -- training/test sizes
-    opt.nTrainDocs = 500
-    opt.nTestDocs = 100
+    opt.nTrainDocs = 24000
+    opt.nTestDocs = 2000
     opt.nClasses = 5
 
     -- training parameters
