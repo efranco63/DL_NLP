@@ -8,7 +8,7 @@ require 'cunn'
 ffi = require('ffi')
 
 -- set seed for recreating tests
-torch.manualSeed(1)
+torch.manualSeed(123)
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
