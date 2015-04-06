@@ -228,7 +228,7 @@ function main()
     -- training parameters
     opt.nEpochs = 100
     opt.batchSize = 128
-    opt.learningRate = 0.01
+    opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
@@ -267,22 +267,22 @@ function main()
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- third layer (46x512) 
-    model:add(nn.TemporalConvolution(512, 512, 5))
-    model:add(nn.Threshold())
+    -- -- third layer (46x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 5))
+    -- model:add(nn.Threshold())
 
-    -- fourth layer (42x512) 
-    model:add(nn.TemporalConvolution(512, 512, 3))
-    model:add(nn.Threshold())
+    -- -- fourth layer (42x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
 
-    -- fourth layer (40x512) 
-    model:add(nn.TemporalConvolution(512, 512, 3))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(2,2))
+    -- -- fourth layer (40x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(18*512))
-    model:add(nn.Linear(18*512,1024))
+    model:add(nn.Reshape(46*512))
+    model:add(nn.Linear(46*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
