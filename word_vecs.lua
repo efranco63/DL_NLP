@@ -162,16 +162,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
     --     end
     -- end
 
-	-- save/log current net
-	if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'model.net')
-    	os.execute('mkdir -p ' .. sys.dirname(filename))
-    	print('==> saving model to '..filename)
-    	torch.save(filename, model)
-    end
-
-    accs['max'] = math.max(accuracy,accs['max'])
-
 	-- next epoch
 	confusion:zero()
 	epoch = epoch + 1
@@ -199,7 +189,23 @@ function test_model(model, data, labels, opt)
     -- print accuracy
     print("==> test accuracy for epoch " .. epoch .. ':')
     -- print(confusion)
-    print(confusion.totalValid*100)
+    accuracy = confusion.totalValid*100
+    print(accuracy)
+
+    -- save/log current net
+    if accuracy > accs['max'] then 
+        local filename = paths.concat(opt.save, 'model3.net')
+        os.execute('mkdir -p ' .. sys.dirname(filename))
+        print('==> saving model to '..filename)
+        torch.save(filename, model)
+    end
+
+    -- if accuracy <= accs['max'] then
+    --     opt.learningRate = opt.learningRate/10
+    -- end
+
+    accs['max'] = math.max(accuracy,accs['max'])
+
     confusion:zero()
 end
 
@@ -219,7 +225,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 200
+    opt.length = 300
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -228,7 +234,7 @@ function main()
     -- training parameters
     opt.nEpochs = 100
     opt.batchSize = 128
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
