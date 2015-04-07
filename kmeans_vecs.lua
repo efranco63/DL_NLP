@@ -184,7 +184,7 @@ function main()
     -- word vector dimensionality
     opt.inputDim = 300
     -- number of clusters used
-    opt.clusters = 300
+    opt.clusters = 2000
     -- paths to glovee vectors and raw data
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- path to save model to
