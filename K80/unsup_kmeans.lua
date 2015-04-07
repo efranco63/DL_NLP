@@ -71,6 +71,8 @@ function kmeans(glove_table)
         end
         cluster_table[k] = clust
         count = count + 1
+        min_d = 1e10
+        clust = 0
     end
 
     return cluster_table, clusters, clust_counts
