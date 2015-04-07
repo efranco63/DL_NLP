@@ -10,46 +10,11 @@ ffi = require('ffi')
 -- set seed for recreating tests
 torch.manualSeed(123)
 
---- Parses and loads the GloVe word vectors into a hash table:
--- glove_table['word'] = vector
-function load_glove(path, inputDim)
-    
-    local glove_file = io.open(path)
-    local glove_table = {}
-
-    local line = glove_file:read("*l")
-    while line do
-        -- read the GloVe text file one line at a time, break at EOF
-        local i = 1
-        local word = ""
-        for entry in line:gmatch("%S+") do -- split the line at each space
-            if i == 1 then
-                -- word comes first in each line, so grab it and create new table entry
-                word = entry:gsub("%p+", ""):lower() -- remove all punctuation and change to lower case
-                if string.len(word) > 0 then
-                    glove_table[word] = torch.zeros(inputDim, 1) -- padded with an extra dimension for convolution
-                else
-                    break
-                end
-            else
-                -- read off and store each word vector element
-                glove_table[word][i-1] = tonumber(entry)
-            end
-            i = i+1
-        end
-        line = glove_file:read("*l")
-    end
-    
-    return glove_table
-end
-
 -- function to read in raw document data and convert to quantized vectors
-function preprocess_data(raw_data, wordvector_table, opt)
+function preprocess_data(raw_data, clusters_table, opt)
     
-    -- create empty tensors that will hold wordvector concatenations
-    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
-    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
+    -- create empty tensors that will hold quantized data and labels
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.clusters)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -58,20 +23,21 @@ function preprocess_data(raw_data, wordvector_table, opt)
     for i=1,opt.nClasses do
         for j=1,opt.nTrainDocs+opt.nTestDocs do
             local k = order[(i-1)*(opt.nTrainDocs+opt.nTestDocs) + j]
-            
+
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
+            -- create empty tensor to hold quantized text
+            local q = torch.Tensor(opt.length,opt.clusters):fill(0)
+
             local wordcount = 1
-            local idx = 3
-            -- break each review into words and concatenate into a vector thats of size length x inputDim
+            -- break each review into words do 1-of-m encoding with the cluster
             for word in document:gmatch("%S+") do
                 if wordcount < opt.length then
-                    if wordvector_table[word:gsub("%p+", "")] then
-                        -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                        data[{ {k},{idx},{} }] = wordvector_table[word:gsub("%p+", "")]
+                    if clusters_table[word:gsub("%p+", "")] then
+                        local place = clusters_table[word:gsub("%p+", "")]
+                        data[{ {k},{wordcount},{place} }] = 1
                         wordcount = wordcount + 1
-                        idx = idx + 1
                     end
                 end
             end
@@ -108,7 +74,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length+4,opt.inputDim):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.clusters):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -169,7 +135,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length+4, opt.inputDim):cuda()
+    t_input = torch.zeros(opt.length, opt.clusters):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -191,7 +157,7 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'model5.net')
+        local filename = paths.concat(opt.save, 'model4.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
@@ -217,13 +183,14 @@ function main()
     accs['max'] = 0
     -- word vector dimensionality
     opt.inputDim = 300
+    -- number of clusters used
+    opt.clusters = 300
     -- paths to glovee vectors and raw data
-    opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 150
+    opt.length = 100
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -237,14 +204,15 @@ function main()
     opt.momentum = 0.9
     opt.weightDecay = 0
 
-    print("Loading word vectors...")
-    local glove_table = load_glove(opt.glovePath, opt.inputDim)
+    -- load clusters table
+    file = torch.DiskFile('clusters_table.asc', 'r')
+    clusters_table = file:readObject()
     
     print("Loading raw data...")
     local raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
-    local processed_data, labels = preprocess_data(raw_data, glove_table, opt)
+    local processed_data, labels = preprocess_data(raw_data, clusters_table, opt)
 
     print("Splitting data into training and validation sets...")
     -- split data into makeshift training and validation sets
@@ -261,21 +229,39 @@ function main()
 
     -- build model *****************************************************************************
     model = nn.Sequential()
-    -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 1024, 7))
+    -- first layer (#clusters x 200)
+    model:add(nn.TemporalConvolution(opt.clusters, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(1024, 1024, 7))
+    -- second layer (97x512) 
+    model:add(nn.TemporalConvolution(512, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
+
+    -- -- third layer (46x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 5))
+    -- model:add(nn.Threshold())
+
+    -- -- fourth layer (42x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
+
+    -- -- fourth layer (40x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(34*1024))
-    model:add(nn.Linear(34*1024,1024))
+    model:add(nn.Reshape(46*512))
+    model:add(nn.Linear(46*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
+
+    -- 2nd fully connected layer (1024)
+    -- model:add(nn.Linear(1024,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
