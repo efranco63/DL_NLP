@@ -8,7 +8,7 @@ require 'cunn'
 ffi = require('ffi')
 
 -- set seed for recreating tests
-torch.manualSeed(1)
+torch.manualSeed(123)
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
@@ -81,46 +81,46 @@ end
 
 function train_model(model, criterion, training_data, training_labels, opt)
 
-	-- classes
-	classes = {'1','2','3','4','5'}
+    -- classes
+    classes = {'1','2','3','4','5'}
 
-	-- This matrix records the current confusion across classes
-	confusion = optim.ConfusionMatrix(classes)
+    -- This matrix records the current confusion across classes
+    confusion = optim.ConfusionMatrix(classes)
 
     parameters,gradParameters = model:getParameters()
 
     -- configure optimizer
     optimState = {
-    	learningRate = opt.learningRate,
-    	weightDecay = opt.weightDecay,
-    	momentum = opt.momentum,
-    	learningRateDecay = opt.learningRateDecay
+        learningRate = opt.learningRate,
+        weightDecay = opt.weightDecay,
+        momentum = opt.momentum,
+        learningRateDecay = opt.learningRateDecay
     }
     optimMethod = optim.sgd
 
     epoch = epoch or 1
-	local time = sys.clock()
+    local time = sys.clock()
 
-	model:training()
+    model:training()
 
-	-- create tensors that live on the GPU and will copy data over from CPU to avoid memory leaks
     inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
-	targets = torch.zeros(opt.batchSize):cuda()
+    targets = torch.zeros(opt.batchSize):cuda()
 
-	-- do one epoch
-	print("\n==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
-	for t = 1,training_data:size(1),opt.batchSize do
-		-- disp progress
-		-- xlua.progress(t, training_data:size(1))
-		inputs:zero()
-		targets:zero()
+    -- do one epoch
+    print("\n==> online epoch # " .. epoch .. ' [batchSize = ' .. opt.batchSize .. ']')
+    for t = 1,training_data:size(1),opt.batchSize do
+        -- disp progress
+        -- xlua.progress(t, training_data:size(1))
+        inputs:zero()
+        targets:zero()
 
-		-- create mini batch
-		if t + opt.batchSize-1 <= training_data:size(1) then
-			-- copy data over from CPU to GPU
-			inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
-			targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
-
+        -- create mini batch
+        if t + opt.batchSize-1 <= training_data:size(1) then
+            -- xx = opt.batchSize
+            inputs[{}] = training_data[{ {t,t+opt.batchSize-1},{},{} }]
+            targets[{}] = training_labels[{ {t,t+opt.batchSize-1} }]
+        
+            -- create closure to evaluate f(X) and df/dX
             local function feval(x) 
                 
                 local f = criterion:forward(model:forward(inputs), targets)
@@ -134,33 +134,36 @@ function train_model(model, criterion, training_data, training_labels, opt)
                 return f, gradParameters
             end
 
-			-- optimize on current mini-batch
-			optimMethod(feval, parameters, optimState)
-		end
-	end
+            -- optimize on current mini-batch
+            optimMethod(feval, parameters, optimState)
+        end
+    end
 
-	-- time taken
-	time = sys.clock() - time
-	time = time / training_data:size(1)
-	print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
+    -- time taken
+    time = sys.clock() - time
+    time = time / training_data:size(1)
+    print("==> time to learn 1 sample = " .. (time*1000) .. 'ms')
 
-	-- print confusion matrix
-	-- print(confusion)
-	confusion:updateValids()
+    -- print confusion matrix
+    -- print(confusion)
+    confusion:updateValids()
 
-	-- print accuracy
-	print("==> training accuracy for epoch " .. epoch .. ':')
-	print(confusion.totalValid*100)
+    -- print accuracy
+    print("==> training accuracy for epoch " .. epoch .. ':')
+    accuracy = confusion.totalValid*100
+    -- log accuracy for this epoch
+    print(accuracy)
 
-	-- save/log current net
-	-- local filename = paths.concat(opt.save, 'model.net')
-	-- os.execute('mkdir -p ' .. sys.dirname(filename))
-	-- print('==> saving model to '..filename)
-	-- torch.save(filename, model)
+    -- if the accuracy for this epoch is less than the previous epoch, decrease learning rate by half
+    -- if epoch > 1 then
+    --     if accuracy <= accs[epoch-1] then
+    --         opt.learningRate = opt.learningRate / 2
+    --     end
+    -- end
 
-	-- next epoch
-	confusion:zero()
-	epoch = epoch + 1
+    -- next epoch
+    confusion:zero()
+    epoch = epoch + 1
 
 end
 
@@ -179,12 +182,30 @@ function test_model(model, data, labels, opt)
         local pred = model:forward(t_input)
         confusion:add(pred, t_labels[1])
     end
+    -- print(confusion)
     confusion:updateValids()
 
     -- print accuracy
-    print("==> test accuracy")
+    print("==> test accuracy for epoch " .. epoch .. ':')
     -- print(confusion)
-    print(confusion.totalValid*100)
+    accuracy = confusion.totalValid*100
+    print(accuracy)
+
+    -- save/log current net
+    if accuracy > accs['max'] then 
+        local filename = paths.concat(opt.save, 'model3.net')
+        os.execute('mkdir -p ' .. sys.dirname(filename))
+        print('==> saving model to '..filename)
+        torch.save(filename, model)
+    end
+
+    -- if accuracy <= accs['max'] then
+    --     opt.learningRate = opt.learningRate/10
+    -- end
+
+    accs['max'] = math.max(accuracy,accs['max'])
+    accs[epoch] = accuracy
+
     confusion:zero()
 end
 
@@ -193,6 +214,9 @@ function main()
 
     -- Configuration parameters
     opt = {}
+    -- table acting as a log of accuracies per epoch
+    accs = {}
+    accs['max'] = 0
     -- word vector dimensionality
     opt.inputDim = 300
     -- paths to glovee vectors and raw data
@@ -201,14 +225,14 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 100
+    opt.length = 300
     -- training/test sizes
-    opt.nTrainDocs = 20000
-    opt.nTestDocs = 6000
+    opt.nTrainDocs = 24000
+    opt.nTestDocs = 2000
     opt.nClasses = 5
 
     -- training parameters
-    opt.nEpochs = 50
+    opt.nEpochs = 100
     opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
@@ -239,19 +263,32 @@ function main()
 
     -- build model *****************************************************************************
     model = nn.Sequential()
-    -- first layer (#alphabet x 100)
-    model:add(nn.TemporalConvolution(opt.inputDim, 256, 7))
+    -- first layer (#inputDim x 204)
+    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (48x256) 48 = (100 - 5 / 1 + 1) / 2
-    model:add(nn.TemporalConvolution(256, 256, 5))
+    -- second layer (147x512) 
+    model:add(nn.TemporalConvolution(512, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- 1st fully connected layer (22x256) 22 = (48 - 5 / 1 + 1) / 2
-    model:add(nn.Reshape(21*256))
-    model:add(nn.Linear(21*256,1024))
+    -- -- third layer (46x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 5))
+    -- model:add(nn.Threshold())
+
+    -- -- fourth layer (42x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
+
+    -- -- fourth layer (40x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 3))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
+
+    -- 1st fully connected layer (19x512)
+    model:add(nn.Reshape(70*512))
+    model:add(nn.Linear(70*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
@@ -264,17 +301,17 @@ function main()
     model:add(nn.Linear(1024,5))
     model:add(nn.LogSoftMax())
 
-	criterion = nn.ClassNLLCriterion()
+    criterion = nn.ClassNLLCriterion()
 
-	-- CUDA
-	model:cuda()
-	criterion:cuda()
+    -- CUDA
+    model:cuda()
+    criterion:cuda()
 
-	print("\nTraining model...")
+    print("\nTraining model...")
     for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
+        train_model(model, criterion, training_data, training_labels, opt)
         test_model(model,test_data,test_labels,opt)
-	end
+    end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
