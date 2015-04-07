@@ -245,21 +245,21 @@ function main()
     print("Loading raw data...")
     raw_data = torch.load(opt.dataPath)
     
-    print("Computing document input representations...")
-    processed_data, labels = preprocess_data(raw_data, glove_table, opt)
+    -- print("Computing document input representations...")
+    -- processed_data, labels = preprocess_data(raw_data, glove_table, opt)
 
-    print("Splitting data into training and validation sets...")
-    -- split data into makeshift training and validation sets
-    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
-    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    -- print("Splitting data into training and validation sets...")
+    -- -- split data into makeshift training and validation sets
+    -- training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    -- training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    if opt.nTestDocs > 0 then
-        test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-        test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
-    else
-        test_data = training_data:clone()
-        test_labels = training_labels:clone()
-    end
+    -- if opt.nTestDocs > 0 then
+    --     test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+    --     test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    -- else
+    --     test_data = training_data:clone()
+    --     test_labels = training_labels:clone()
+    -- end
 
     -- build model *****************************************************************************
     model = nn.Sequential()
