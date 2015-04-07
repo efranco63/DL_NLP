@@ -8,7 +8,7 @@ require 'cunn'
 ffi = require('ffi')
 
 -- set seed for recreating tests
-torch.manualSeed(1234)
+torch.manualSeed(123)
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
@@ -47,10 +47,10 @@ end
 function preprocess_data(raw_data, wordvector_table, opt)
     
     -- create empty tensors that will hold wordvector concatenations
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
-    local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
+    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
     -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
+    local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
@@ -69,7 +69,7 @@ function preprocess_data(raw_data, wordvector_table, opt)
                 if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
                         -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                        data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {k},{idx},{} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
                         idx = idx + 1
                     end
@@ -108,7 +108,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.length+4,opt.inputDim):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -169,7 +169,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
+    t_input = torch.zeros(opt.length+4, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -191,15 +191,15 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'model3.net')
+        local filename = paths.concat(opt.save, 'model4.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
     end
 
-    if accuracy <= accs['max'] then
-        opt.learningRate = opt.learningRate/10
-    end
+    -- if accuracy <= accs['max'] then
+    --     opt.learningRate = opt.learningRate/10
+    -- end
 
     accs['max'] = math.max(accuracy,accs['max'])
     accs[epoch] = accuracy
@@ -232,7 +232,7 @@ function main()
     -- training parameters
     opt.nEpochs = 100
     opt.batchSize = 128
-    opt.learningRate = 0.01
+    opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
@@ -262,12 +262,12 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim, 1024, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(512, 512, 7))
+    model:add(nn.TemporalConvolution(1024, 1024, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
@@ -285,8 +285,8 @@ function main()
     -- model:add(nn.TemporalMaxPooling(2,2))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(45*512))
-    model:add(nn.Linear(45*512,1024))
+    model:add(nn.Reshape(46*1024))
+    model:add(nn.Linear(46*1024,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
 
