@@ -225,7 +225,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 250
+    opt.length = 200
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
