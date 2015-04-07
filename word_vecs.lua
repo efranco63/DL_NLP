@@ -223,7 +223,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 300
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
