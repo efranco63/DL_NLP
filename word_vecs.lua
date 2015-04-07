@@ -49,7 +49,7 @@ function preprocess_data(raw_data, wordvector_table, opt)
     -- create empty tensors that will hold wordvector concatenations
     -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
     -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim+4)
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -69,7 +69,7 @@ function preprocess_data(raw_data, wordvector_table, opt)
                 if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
                         -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                        data[{ {k},{idx},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {k},{wordcount},{3} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
                         idx = idx + 1
                     end
@@ -223,7 +223,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 300
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
@@ -312,11 +312,11 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	-- print("\nTraining model...")
- --    for i=1,opt.nEpochs do
-	-- 	train_model(model, criterion, training_data, training_labels, opt)
- --        test_model(model,test_data,test_labels,opt)
-	-- end
+	print("\nTraining model...")
+    for i=1,opt.nEpochs do
+		train_model(model, criterion, training_data, training_labels, opt)
+        test_model(model,test_data,test_labels,opt)
+	end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
