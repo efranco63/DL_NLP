@@ -53,7 +53,7 @@ function kmeans(glove_table)
 
     -- calculate clusters
     print('Calculating kmeans clusters')
-    clusters,count = unsup.kmeans(data,opt.clusters)
+    clusters,clust_counts = unsup.kmeans(data,opt.clusters)
 
     print('Allocating cluster to each word')
     -- iterate through the words and find its closest cluster
@@ -73,7 +73,7 @@ function kmeans(glove_table)
         count = count + 1
     end
 
-    return cluster_table
+    return cluster_table, clusters, clust_counts
 
 end
 
@@ -94,7 +94,8 @@ function main()
     print("Loading word vectors...")
     glove_table = load_glove(opt.glovePath, opt.inputDim)
     
-    cluster_table = kmeans(glove_table)
+    print("Computing kmeans clusters...")
+    cluster_table, clusters, count = kmeans(glove_table)
 
     -- write table to file to import elsewhere
     file = torch.DiskFile('clusters_table.asc', 'w')
