@@ -198,7 +198,7 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'model3.net')
+        local filename = paths.concat(opt.save, 'model4.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
@@ -223,7 +223,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 50
+    opt.inputDim = 300
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
@@ -248,15 +248,15 @@ function main()
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
     
     print("Loading raw data...")
-    raw_data = torch.load(opt.dataPath)
+    local raw_data = torch.load(opt.dataPath)
     
     print("Computing document input representations...")
-    processed_data, labels = preprocess_data(raw_data, glove_table, opt)
+    local processed_data, labels = preprocess_data(raw_data, glove_table, opt)
 
     print("Splitting data into training and validation sets...")
     -- split data into makeshift training and validation sets
-    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
-    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    local training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    local training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
     if opt.nTestDocs > 0 then
         test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
