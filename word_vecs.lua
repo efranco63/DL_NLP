@@ -47,7 +47,9 @@ end
 function preprocess_data(raw_data, wordvector_table, opt)
     
     -- create empty tensors that will hold wordvector concatenations
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
+    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
+    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim+4)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -61,12 +63,15 @@ function preprocess_data(raw_data, wordvector_table, opt)
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
             local wordcount = 1
+            local idx = 3
             -- break each review into words and concatenate into a vector thats of size length x inputDim
             for word in document:gmatch("%S+") do
                 if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
-                        data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {k},{idx},{} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
+                        idx = idx + 1
                     end
                 end
             end
@@ -225,7 +230,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 250
+    opt.length = 200
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -307,11 +312,11 @@ function main()
 	model:cuda()
 	criterion:cuda()
 
-	print("\nTraining model...")
-    for i=1,opt.nEpochs do
-		train_model(model, criterion, training_data, training_labels, opt)
-        test_model(model,test_data,test_labels,opt)
-	end
+	-- print("\nTraining model...")
+ --    for i=1,opt.nEpochs do
+	-- 	train_model(model, criterion, training_data, training_labels, opt)
+ --        test_model(model,test_data,test_labels,opt)
+	-- end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
