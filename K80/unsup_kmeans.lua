@@ -89,7 +89,7 @@ function main()
     print("Loading word vectors...")
     local glove_table = load_glove(opt.glovePath, opt.inputDim)
     
-    clusters_table = kmeans(glove_table)
+    -- clusters_table = kmeans(glove_table)
 
 end
 
