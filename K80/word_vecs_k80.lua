@@ -154,13 +154,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
     -- log accuracy for this epoch
     print(accuracy)
 
-    -- if the accuracy for this epoch is less than the previous epoch, decrease learning rate by half
-    -- if epoch > 1 then
-    --     if accuracy <= accs[epoch-1] then
-    --         opt.learningRate = opt.learningRate / 2
-    --     end
-    -- end
-
     -- next epoch
     confusion:zero()
     epoch = epoch + 1
@@ -246,20 +239,20 @@ function main()
     raw_data = torch.load(opt.dataPath)
     
     -- print("Computing document input representations...")
-    -- processed_data, labels = preprocess_data(raw_data, glove_table, opt)
+    processed_data, labels = preprocess_data(raw_data, glove_table, opt)
 
-    -- print("Splitting data into training and validation sets...")
-    -- -- split data into makeshift training and validation sets
-    -- training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
-    -- training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
+    print("Splitting data into training and validation sets...")
+    -- split data into makeshift training and validation sets
+    training_data = processed_data[{ {1,opt.nClasses*opt.nTrainDocs},{},{} }]:clone()
+    training_labels = labels[{ {1,opt.nClasses*opt.nTrainDocs} }]:clone()
    
-    -- if opt.nTestDocs > 0 then
-    --     test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
-    --     test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
-    -- else
-    --     test_data = training_data:clone()
-    --     test_labels = training_labels:clone()
-    -- end
+    if opt.nTestDocs > 0 then
+        test_data = processed_data[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)},{},{} }]:clone()
+        test_labels = labels[{ {(opt.nClasses*opt.nTrainDocs)+1,opt.nClasses*(opt.nTrainDocs+opt.nTestDocs)} }]:clone()
+    else
+        test_data = training_data:clone()
+        test_labels = training_labels:clone()
+    end
 
     -- build model *****************************************************************************
     model = nn.Sequential()
@@ -307,11 +300,11 @@ function main()
     model:cuda()
     criterion:cuda()
 
-    -- print("\nTraining model...")
-    -- for i=1,opt.nEpochs do
-    --     train_model(model, criterion, training_data, training_labels, opt)
-    --     test_model(model,test_data,test_labels,opt)
-    -- end
+    print("\nTraining model...")
+    for i=1,opt.nEpochs do
+        train_model(model, criterion, training_data, training_labels, opt)
+        test_model(model,test_data,test_labels,opt)
+    end
     -- local results = test_model(model, test_data, test_labels)
     -- print(results)
 end
