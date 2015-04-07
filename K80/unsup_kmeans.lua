@@ -43,8 +43,8 @@ end
 
 function kmeans(glove_table)
     
-    
 
+    data = torch.zeros(375036,opt.inputDim)
     count = 1
     for k,v in pairs(glove_table) do
        data[{ {count},{} }] = glove_table[k]:transpose(1,2)
@@ -52,9 +52,28 @@ function kmeans(glove_table)
     end
 
     -- calculate clusters
-    clusters,count = unsup.kmeans(data,500)
+    print('Calculating kmeans clusters')
+    clusters,count = unsup.kmeans(data,opt.clusters)
 
-    dist = torch.dist(glove_table['dog'],clusters[{ {1},{} }])
+    print('Allocating cluster to each word')
+    -- iterate through the words and find its closest cluster
+    cluster_table = {}
+    count = 1
+    min_d = 1e10
+    clust = 0
+    for k,v in pairs(glove_table) do
+        for j=1,opt.clusters do
+            dist = torch.dist(data[count],clusters[{ {j},{} }])
+            if dist < min_d then
+                clust = j
+                min_d = dist
+            end
+        end
+        cluster_table[k] = clust
+        count = count + 1
+    end
+
+    return cluster_table
 
 end
 
@@ -62,9 +81,6 @@ function main()
 
     -- Configuration parameters
     opt = {}
-    -- table acting as a log of accuracies per epoch
-    accs = {}
-    accs['max'] = 0
     -- word vector dimensionality
     opt.inputDim = 300
     -- paths to glovee vectors and raw data
@@ -72,24 +88,18 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 300
-    -- training/test sizes
-    opt.nTrainDocs = 24000
-    opt.nTestDocs = 2000
-    opt.nClasses = 5
+    opt.clusters = 2000
 
-    -- training parameters
-    opt.nEpochs = 100
-    opt.batchSize = 128
-    opt.learningRate = 0.01
-    opt.learningRateDecay = 1e-5
-    opt.momentum = 0.9
-    opt.weightDecay = 0
 
     print("Loading word vectors...")
-    local glove_table = load_glove(opt.glovePath, opt.inputDim)
+    glove_table = load_glove(opt.glovePath, opt.inputDim)
     
-    -- clusters_table = kmeans(glove_table)
+    cluster_table = kmeans(glove_table)
+
+    -- write table to file to import elsewhere
+    file = torch.DiskFile('clusters_table.asc', 'w')
+    file:writeObject(cluster_table)
+    file:close()
 
 end
 
