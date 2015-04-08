@@ -223,7 +223,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 150
+    opt.length = 200
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -269,13 +269,19 @@ function main()
     -- second layer (147x512) 
     model:add(nn.TemporalConvolution(1024, 1024, 7))
     model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(2,2))
+    model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(34*1024))
-    model:add(nn.Linear(34*1024,1024))
+    model:add(nn.Reshape(31*1024))
+    model:add(nn.Linear(31*1024,1024))
     model:add(nn.Threshold())
-    model:add(nn.Dropout(0.5))
+    model:add(nn.Dropout(0.7))
+
+    -- 1st fully connected layer (19x512)
+    model:add(nn.Reshape(1024))
+    model:add(nn.Linear(512,512))
+    model:add(nn.Threshold())
+    model:add(nn.Dropout(0.7))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
