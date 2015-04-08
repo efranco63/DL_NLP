@@ -274,8 +274,8 @@ function main()
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(47*512))
-    model:add(nn.Linear(47*512,1024))
+    model:add(nn.Reshape(30*512))
+    model:add(nn.Linear(30*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.7))
 
