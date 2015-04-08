@@ -60,8 +60,7 @@ function preprocess_train_data(raw_data, wordvector_table, opt)
         for word in document:gmatch("%S+") do
             if wordcount < opt.length then
                 if wordvector_table[word:gsub("%p+", "")] then
-                    -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                    data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
+                    data[{ {j},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
                     wordcount = wordcount + 1
                 end
             end
@@ -79,8 +78,9 @@ function preprocess_test_data(raw_data, wordvector_table, opt)
     local data = torch.zeros(5*opt.nTestDocs, opt.length, opt.inputDim)
     local labels = torch.zeros(5*opt.nTestDocs)
     
+    local counter = 1
     for i = 1,5 do
-        for j=opt.nTrainDocs+1,opt.nTrainDocs+(opt.nTestDocs) do
+        for j=opt.nTrainDocs+1,opt.nTrainDocs+opt.nTestDocs do
 
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
@@ -90,14 +90,14 @@ function preprocess_test_data(raw_data, wordvector_table, opt)
             for word in document:gmatch("%S+") do
                 if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
-                        -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                        data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {counter},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
                     end
                 end
             end
 
-            labels[j] = raw_data.labels[i][j]
+            labels[counter] = raw_data.labels[i][j]
+            counter = counter + 1
         end
     end
 
@@ -234,7 +234,7 @@ function main()
     accs = {}
     accs['max'] = 0
     -- word vector dimensionality
-    opt.inputDim = 300
+    opt.inputDim = 50
     -- paths to glovee vectors and raw data
     opt.glovePath = "/scratch/courses/DSGA1008/A3/glove/glove.6B." .. opt.inputDim .. "d.txt"
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
