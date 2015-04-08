@@ -231,7 +231,7 @@ function main()
 
     -- training parameters
     opt.nEpochs = 100
-    opt.batchSize = 128
+    opt.batchSize = 1
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
@@ -262,18 +262,18 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 1024, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(1024, 1024, 7))
+    model:add(nn.TemporalConvolution(512, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(31*1024))
-    model:add(nn.Linear(31*1024,1024))
+    model:add(nn.Reshape(31*512))
+    model:add(nn.Linear(31*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.7))
 
@@ -298,8 +298,7 @@ function main()
 		train_model(model, criterion, training_data, training_labels, opt)
         test_model(model,test_data,test_labels,opt)
 	end
-    -- local results = test_model(model, test_data, test_labels)
-    -- print(results)
+
 end
 
 main()
