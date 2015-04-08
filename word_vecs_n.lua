@@ -245,12 +245,12 @@ function main()
     -- training/test sizes per class
     -- opt.nTrainDocs = 97500
     -- opt.nTestDocs = 32500
-    opt.nTrainDocs = 1000
-    opt.nTestDocs = 500
+    opt.nTrainDocs = 400
+    opt.nTestDocs = 400
 
     -- training parameters
     opt.nEpochs = 100
-    opt.batchSize = 64
+    opt.batchSize = 128
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
@@ -295,23 +295,23 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim, 20, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
     -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(512, 512, 7))
+    model:add(nn.TemporalConvolution(20, 20, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(13*512))
-    model:add(nn.Linear(13*512,1024))
+    model:add(nn.Reshape(13*20))
+    model:add(nn.Linear(13*20,40))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.7))
 
-    -- final layer for classification
-    model:add(nn.Linear(1024,5))
+    -- final layer for classification 1024
+    model:add(nn.Linear(40,5))
     model:add(nn.LogSoftMax())
 
 	criterion = nn.ClassNLLCriterion()
