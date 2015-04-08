@@ -194,7 +194,7 @@ function main()
 
     -- training parameters
     opt.nEpochs = 100
-    opt.batchSize = 1
+    opt.batchSize = 128
     opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
