@@ -8,7 +8,7 @@ require 'cunn'
 ffi = require('ffi')
 
 -- set seed for recreating tests
-torch.manualSeed(123)
+torch.manualSeed(8)
 
 --- Parses and loads the GloVe word vectors into a hash table:
 -- glove_table['word'] = vector
@@ -47,10 +47,10 @@ end
 function preprocess_data(raw_data, wordvector_table, opt)
     
     -- create empty tensors that will hold wordvector concatenations
-    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
-    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
+    -- local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length+4, opt.inputDim)
+    -- local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
     local order = torch.randperm(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs))
@@ -69,7 +69,7 @@ function preprocess_data(raw_data, wordvector_table, opt)
                 if wordcount < opt.length then
                     if wordvector_table[word:gsub("%p+", "")] then
                         -- data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
-                        data[{ {k},{idx},{} }] = wordvector_table[word:gsub("%p+", "")]
+                        data[{ {k},{wordcount},{} }] = wordvector_table[word:gsub("%p+", "")]
                         wordcount = wordcount + 1
                         idx = idx + 1
                     end
@@ -108,7 +108,8 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length+4,opt.inputDim):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
+    -- inputs = torch.zeros(opt.batchSize,opt.length+4,opt.inputDim):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -169,7 +170,8 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length+4, opt.inputDim):cuda()
+    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
+    -- t_input = torch.zeros(opt.length+4, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -223,7 +225,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 200
+    opt.length = 300
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -231,8 +233,8 @@ function main()
 
     -- training parameters
     opt.nEpochs = 100
-    opt.batchSize = 1
-    opt.learningRate = 0.1
+    opt.batchSize = 64
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
@@ -272,14 +274,8 @@ function main()
     model:add(nn.TemporalMaxPooling(3,3))
 
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(31*512))
-    model:add(nn.Linear(31*512,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.7))
-
-    -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(1024))
-    model:add(nn.Linear(512,512))
+    model:add(nn.Reshape(47*512))
+    model:add(nn.Linear(47*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.7))
 
