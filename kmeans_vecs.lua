@@ -14,7 +14,7 @@ torch.manualSeed(123)
 function preprocess_data(raw_data, clusters_table, opt)
     
     -- create empty tensors that will hold quantized data and labels
-    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.clusters)
+    local data = torch.zeros(opt.nClasses*(opt.nTrainDocs+opt.nTestDocs), opt.length, opt.inputDim)
     local labels = torch.zeros(opt.nClasses*(opt.nTrainDocs + opt.nTestDocs))
     
     -- use torch.randperm to shuffle the data, since it's ordered by class in the file
@@ -27,16 +27,14 @@ function preprocess_data(raw_data, clusters_table, opt)
             local index = raw_data.index[i][j]
             -- standardize to all lowercase
             local document = ffi.string(torch.data(raw_data.content:narrow(1, index, 1))):lower()
-            -- create empty tensor to hold quantized text
-            local q = torch.Tensor(opt.length,opt.clusters):fill(0)
 
             local wordcount = 1
-            -- break each review into words do 1-of-m encoding with the cluster
+            -- break each review into words concatenate cluster centroid for each word
             for word in document:gmatch("%S+") do
                 if wordcount < opt.length then
                     if clusters_table[word:gsub("%p+", "")] then
                         local place = clusters_table[word:gsub("%p+", "")]
-                        data[{ {k},{wordcount},{place} }] = 1
+                        data[{ {k},{wordcount},{} }] = clusters[place]
                         wordcount = wordcount + 1
                     end
                 end
@@ -74,7 +72,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 
 	model:training()
 
-	inputs = torch.zeros(opt.batchSize,opt.length,opt.clusters):cuda()
+	inputs = torch.zeros(opt.batchSize,opt.length,opt.inputDim):cuda()
 	targets = torch.zeros(opt.batchSize):cuda()
 
 	-- do one epoch
@@ -135,7 +133,7 @@ function test_model(model, data, labels, opt)
 
     model:evaluate()
 
-    t_input = torch.zeros(opt.length, opt.clusters):cuda()
+    t_input = torch.zeros(opt.length, opt.inputDim):cuda()
     t_labels = torch.zeros(1):cuda()
     -- test over test data
     for t = 1,data:size(1) do
@@ -183,14 +181,12 @@ function main()
     accs['max'] = 0
     -- word vector dimensionality
     opt.inputDim = 300
-    -- number of clusters used
-    opt.clusters = 2000
     -- paths to glovee vectors and raw data
     opt.dataPath = "/scratch/courses/DSGA1008/A3/data/train.t7b"
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.length = 100
+    opt.length = 200
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
@@ -204,9 +200,11 @@ function main()
     opt.momentum = 0.9
     opt.weightDecay = 0
 
-    -- load clusters table
+    -- load clusters  and clusters table
     file = torch.DiskFile('K80/clusters_table.asc', 'r')
     clusters_table = file:readObject()
+    file = torch.DiskFile('K80/clusters.asc', 'r')
+    clusters = file:readObject()
     
     print("Loading raw data...")
     local raw_data = torch.load(opt.dataPath)
@@ -230,7 +228,7 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#clusters x 200)
-    model:add(nn.TemporalConvolution(opt.clusters, 512, 7))
+    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
@@ -239,29 +237,11 @@ function main()
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
-    -- -- third layer (46x512) 
-    -- model:add(nn.TemporalConvolution(512, 512, 5))
-    -- model:add(nn.Threshold())
-
-    -- -- fourth layer (42x512) 
-    -- model:add(nn.TemporalConvolution(512, 512, 3))
-    -- model:add(nn.Threshold())
-
-    -- -- fourth layer (40x512) 
-    -- model:add(nn.TemporalConvolution(512, 512, 3))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.TemporalMaxPooling(2,2))
-
     -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(21*512))
-    model:add(nn.Linear(21*512,1024))
+    model:add(nn.Reshape(30*512))
+    model:add(nn.Linear(30*512,1024))
     model:add(nn.Threshold())
     model:add(nn.Dropout(0.5))
-
-    -- 2nd fully connected layer (1024)
-    -- model:add(nn.Linear(1024,1024))
-    -- model:add(nn.Threshold())
-    -- model:add(nn.Dropout(0.5))
 
     -- final layer for classification
     model:add(nn.Linear(1024,5))
