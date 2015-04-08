@@ -193,7 +193,7 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'model7.net')
+        local filename = paths.concat(opt.save, 'model10.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
@@ -233,7 +233,7 @@ function main()
 
     -- training parameters
     opt.nEpochs = 100
-    opt.batchSize = 64
+    opt.batchSize = 1
     opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
