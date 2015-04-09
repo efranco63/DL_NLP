@@ -235,13 +235,13 @@ function main()
     s_raw_data = {}
     s_raw_data['index'] = torch.reshape(raw_data.index,1,5*130000)
     s_raw_data['labels'] = torch.zeros(650000)
-    for i=1,10 do
-        s_raw_data['labels'][{ {65000*(i-1)+1,i*65000} }] = i
+    for i=1,5 do
+        s_raw_data['labels'][{ {130000*(i-1)+1,i*130000} }] = i
     end
     order = torch.randperm(650000)
 
     index_table = {}
-    for i=1,10 do
+    for i=1,5 do
         index_table[i] = order[{ {65000*(i-1)+1,i*65000} }]
     end
 
