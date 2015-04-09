@@ -211,8 +211,8 @@ function main()
     opt.length = 200
     opt.clusters = 500
     -- training/test sizes per class
-    opt.nTrainDocs = 97500
-    opt.nTestDocs = 32500
+    opt.nTrainDocs = 48750
+    opt.nTestDocs = 16250
 
     -- training parameters
     opt.init_weight = 0.1 -- random weight initialization
