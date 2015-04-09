@@ -268,7 +268,7 @@ function main()
     -- build model *****************************************************************************
     model = nn.Sequential()
     -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
+    model:add(nn.TemporalConvolution(opt.clusters, 512, 7))
     model:add(nn.Threshold())
     model:add(nn.TemporalMaxPooling(2,2))
 
