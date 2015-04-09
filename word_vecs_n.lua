@@ -312,7 +312,7 @@ function main()
     -- -- final layer for classification 1024
     -- model:add(nn.Linear(1024,5))
     -- model:add(nn.LogSoftMax())
-    model = torch.load('model12.net')
+    model = torch.load('results/model12.net')
 
 	criterion = nn.ClassNLLCriterion()
 
