@@ -112,12 +112,7 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	-- This matrix records the current confusion across classes
 	confusion = optim.ConfusionMatrix(classes)
 
-    -- randomly initialize parameters
-    if epoch == 1 and opt.idx == 1 then
-        parameters,gradParameters = model:getParameters():uniform(-opt.init_weight, opt.init_weight)
-    else
-        parameters,gradParameters = model:getParameters()
-    end
+    parameters,gradParameters = model:getParameters()
 
     -- configure optimizer
     optimState = {
@@ -323,6 +318,9 @@ function main()
 	-- CUDA
 	model:cuda()
 	criterion:cuda()
+
+    -- randomly initialize weights  
+    model:getParameters():uniform(-opt.init_weight, opt.init_weight)
 
 	print("\nTraining model...")
     for i=1,opt.nEpochs do
