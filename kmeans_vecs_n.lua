@@ -241,7 +241,7 @@ function main()
     order = torch.randperm(650000)
 
     index_table = {}
-    for i=1,5 do
+    for i=1,10 do
         index_table[i] = order[{ {65000*(i-1)+1,i*65000} }]
     end
 
