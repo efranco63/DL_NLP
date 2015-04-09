@@ -177,7 +177,7 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'modelk_s.net')
+        local filename = paths.concat(opt.save, 'modelk_s2.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
@@ -218,7 +218,7 @@ function main()
     opt.init_weight = 0.1 -- random weight initialization
     opt.nEpochs = 50
     opt.batchSize = 128
-    opt.learningRate = 0.1
+    opt.learningRate = 0.01
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
