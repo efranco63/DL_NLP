@@ -90,7 +90,7 @@ function main()
     -- path to save model to
     opt.save = "results"
     -- maximum number of words per text document
-    opt.clusters = 2000
+    opt.clusters = 500
 
 
     print("Loading word vectors...")
@@ -100,7 +100,7 @@ function main()
     cluster_table, clusters, count = kmeans(glove_table)
 
     -- write table to file to import elsewhere
-    file = torch.DiskFile('clusters_table.asc', 'w')
+    file = torch.DiskFile('clusters_table_500.asc', 'w')
     file:writeObject(cluster_table)
     file:close()
 
