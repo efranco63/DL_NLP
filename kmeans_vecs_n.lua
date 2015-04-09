@@ -81,12 +81,6 @@ function train_model(model, criterion, training_data, training_labels, opt)
     -- This matrix records the current confusion across classes
     confusion = optim.ConfusionMatrix(classes)
 
-    -- randomly initialize parameters
-    -- if epoch == 1 and opt.idx == 1 then
-    --     parameters,gradParameters = model:getParameters():uniform(-opt.init_weight, opt.init_weight)
-    -- else
-    --     parameters,gradParameters = model:getParameters()
-    -- end
     parameters,gradParameters = model:getParameters()
 
     -- configure optimizer
@@ -241,20 +235,20 @@ function main()
     s_raw_data = {}
     s_raw_data['index'] = torch.reshape(raw_data.index,1,5*130000)
     s_raw_data['labels'] = torch.zeros(650000)
-    for i=1,5 do
-        s_raw_data['labels'][{ {130000*(i-1)+1,i*130000} }] = i
+    for i=1,10 do
+        s_raw_data['labels'][{ {65000*(i-1)+1,i*65000} }] = i
     end
     order = torch.randperm(650000)
 
     index_table = {}
-    for i=1,5 do
-        index_table[i] = order[{ {130000*(i-1)+1,i*130000} }]
+    for i=1,10 do
+        index_table[i] = order[{ {65000*(i-1)+1,i*65000} }]
     end
 
-    labels = torch.zeros(5,130000)
-    index_n = torch.zeros(5,130000)
-    for j=1,5 do
-        for i=1,130000 do
+    labels = torch.zeros(10,65000)
+    index_n = torch.zeros(10,65000)
+    for j=1,10 do
+        for i=1,65000 do
             index_n[{ {j},{i} }] = s_raw_data.index[{ {},{index_table[j][i]} }]
             labels[{ {j},{i} }] = s_raw_data.labels[index_table[j][i]]
         end
@@ -297,7 +291,7 @@ function main()
     print("\nTraining model...")
     for i=1,opt.nEpochs do
         epoch = i
-        for j=1,5 do
+        for j=1,10 do
             opt.idx = j
             print("Processing data batch " .. j .. " for epoch " .. i)
             local training_data, training_labels = preprocess_train_data(n_raw_data, clusters_table, opt)
