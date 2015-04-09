@@ -112,7 +112,12 @@ function train_model(model, criterion, training_data, training_labels, opt)
 	-- This matrix records the current confusion across classes
 	confusion = optim.ConfusionMatrix(classes)
 
-    parameters,gradParameters = model:getParameters()
+    -- randomly initialize parameters
+    if epoch == 1 and opt.idx == 1 then
+        parameters,gradParameters = model:getParameters():uniform(-opt.init_weight, opt.init_weight)
+    else
+        parameters,gradParameters = model:getParameters()
+    end
 
     -- configure optimizer
     optimState = {
@@ -247,6 +252,7 @@ function main()
     opt.nTestDocs = 32500
 
     -- training parameters
+    opt.init_weight = 0.1 -- random weight initialization
     opt.nEpochs = 50
     opt.batchSize = 64
     opt.learningRate = 0.01
