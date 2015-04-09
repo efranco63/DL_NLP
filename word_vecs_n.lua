@@ -321,7 +321,7 @@ function main()
 	criterion:cuda()
 
     -- randomly initialize weights  
-    model:getParameters():uniform(-opt.init_weight, opt.init_weight)
+    -- model:getParameters():uniform(-opt.init_weight, opt.init_weight)
 
 	print("\nTraining model...")
     for i=1,opt.nEpochs do
