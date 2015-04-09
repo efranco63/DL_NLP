@@ -187,6 +187,7 @@ function main()
     opt.save = "results"
     -- maximum number of words per text document
     opt.length = 200
+    opt.clusters = 500
     -- training/test sizes
     opt.nTrainDocs = 24000
     opt.nTestDocs = 2000
