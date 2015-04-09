@@ -291,27 +291,28 @@ function main()
     n_raw_data['content'] = raw_data.content:clone()
     -----------------------------------------------------------------------------------
 
-    -- build model *****************************************************************************
-    model = nn.Sequential()
-    -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(2,2))
+    -- -- build model *****************************************************************************
+    -- model = nn.Sequential()
+    -- -- first layer (#inputDim x 204)
+    -- model:add(nn.TemporalConvolution(opt.inputDim, 512, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(512, 512, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(3,3))
+    -- -- second layer (147x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(3,3))
 
-    -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(30*512))
-    model:add(nn.Linear(30*512,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.7))
+    -- -- 1st fully connected layer (19x512)
+    -- model:add(nn.Reshape(30*512))
+    -- model:add(nn.Linear(30*512,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.7))
 
-    -- final layer for classification 1024
-    model:add(nn.Linear(1024,5))
-    model:add(nn.LogSoftMax())
+    -- -- final layer for classification 1024
+    -- model:add(nn.Linear(1024,5))
+    -- model:add(nn.LogSoftMax())
+    model = torch.load('model12.net')
 
 	criterion = nn.ClassNLLCriterion()
 
