@@ -177,7 +177,7 @@ function test_model(model, data, labels, opt)
 
     -- save/log current net
     if accuracy > accs['max'] then 
-        local filename = paths.concat(opt.save, 'modelk_s2.net')
+        local filename = paths.concat(opt.save, 'modelk_s.net')
         os.execute('mkdir -p ' .. sys.dirname(filename))
         print('==> saving model to '..filename)
         torch.save(filename, model)
@@ -218,7 +218,7 @@ function main()
     opt.init_weight = 0.1 -- random weight initialization
     opt.nEpochs = 50
     opt.batchSize = 128
-    opt.learningRate = 0.01
+    opt.learningRate = 0.1
     opt.learningRateDecay = 1e-5
     opt.momentum = 0.9
     opt.weightDecay = 0
@@ -261,26 +261,27 @@ function main()
     -----------------------------------------------------------------------------------
 
     -- build model *****************************************************************************
-    model = nn.Sequential()
-    -- first layer (#inputDim x 204)
-    model:add(nn.TemporalConvolution(opt.clusters, 512, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(2,2))
+    -- model = nn.Sequential()
+    -- -- first layer (#inputDim x 204)
+    -- model:add(nn.TemporalConvolution(opt.clusters, 512, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(2,2))
 
-    -- second layer (147x512) 
-    model:add(nn.TemporalConvolution(512, 512, 7))
-    model:add(nn.Threshold())
-    model:add(nn.TemporalMaxPooling(3,3))
+    -- -- second layer (147x512) 
+    -- model:add(nn.TemporalConvolution(512, 512, 7))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.TemporalMaxPooling(3,3))
 
-    -- 1st fully connected layer (19x512)
-    model:add(nn.Reshape(30*512))
-    model:add(nn.Linear(30*512,1024))
-    model:add(nn.Threshold())
-    model:add(nn.Dropout(0.7))
+    -- -- 1st fully connected layer (19x512)
+    -- model:add(nn.Reshape(30*512))
+    -- model:add(nn.Linear(30*512,1024))
+    -- model:add(nn.Threshold())
+    -- model:add(nn.Dropout(0.7))
 
-    -- final layer for classification 1024
-    model:add(nn.Linear(1024,5))
-    model:add(nn.LogSoftMax())
+    -- -- final layer for classification 1024
+    -- model:add(nn.Linear(1024,5))
+    -- model:add(nn.LogSoftMax())
+    model = torch.load('results/modelk_s.net')
 
     criterion = nn.ClassNLLCriterion()
 
